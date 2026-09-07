@@ -11,7 +11,7 @@ export type ToolDefinition = {
   name: string;
   category: ToolCategory;
   description: string;
-  icon: "zap" | "activity" | "cable";
+  icon: "zap" | "activity" | "cable" | "shield";
 };
 
 export const tools: ToolDefinition[] = [
@@ -38,6 +38,14 @@ export const tools: ToolDefinition[] = [
     description:
       "Simplified IEC voltage drop for copper or aluminium conductors, with temperature, power factor, and optional reactance.",
     icon: "cable",
+  },
+  {
+    slug: "protection-curves",
+    name: "IDMT Protection Curves",
+    category: "Power Systems",
+    description:
+      "Plot IEC 60255-151 time–current curves for several devices: Standard, Very, Extremely, and Long-time Inverse, plus independent (definite) time, with I> pickup, TMS, and optional I>>.",
+    icon: "shield",
   },
 ];
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Cable, Zap, type LucideIcon } from "lucide-react";
+import { Activity, Cable, Shield, Zap, type LucideIcon } from "lucide-react";
 import {
   Card,
   CardDescription,
@@ -12,6 +12,7 @@ const ICONS: Record<ToolDefinition["icon"], LucideIcon> = {
   zap: Zap,
   activity: Activity,
   cable: Cable,
+  shield: Shield,
 };
 
 export default function HomePage() {

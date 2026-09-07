@@ -129,6 +129,7 @@ export function VoltageDropCalculator() {
           <Label>Conductor</Label>
           <Select
             value={material}
+            items={{ copper: "Copper", aluminium: "Aluminium" }}
             onValueChange={(value) => value && setMaterial(value as ConductorMaterial)}
           >
             <SelectTrigger className="w-full">
@@ -144,6 +145,10 @@ export function VoltageDropCalculator() {
           <Label>Circuit</Label>
           <Select
             value={circuit}
+            items={{
+              "three-phase": "Three-phase",
+              "single-phase": "Single-phase",
+            }}
             onValueChange={(value) => value && setCircuit(value as CircuitType)}
           >
             <SelectTrigger className="w-full">
