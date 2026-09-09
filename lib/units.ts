@@ -48,6 +48,14 @@ export const temperatureUnits: UnitOption[] = [
   { value: "°C", label: "°C", factor: 1 },
 ];
 
+/** Multiply display value by this to get seconds. */
+export const timeUnits: UnitOption[] = [
+  { value: "ms", label: "ms", factor: 1e-3 },
+  { value: "s", label: "s", factor: 1 },
+  { value: "min", label: "min", factor: 60 },
+  { value: "h", label: "h", factor: 3600 },
+];
+
 export function toBase(display: number, factor: number): number {
   return display * factor;
 }

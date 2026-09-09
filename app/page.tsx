@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Cable, Gauge, Shield, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
+import { Activity, Battery, Cable, Gauge, Shield, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
 import {
   Card,
   CardDescription,
@@ -15,6 +15,7 @@ const ICONS: Record<ToolDefinition["icon"], LucideIcon> = {
   shield: Shield,
   "shield-check": ShieldCheck,
   gauge: Gauge,
+  battery: Battery,
 };
 
 export default function HomePage() {

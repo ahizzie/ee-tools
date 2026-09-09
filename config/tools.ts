@@ -11,7 +11,7 @@ export type ToolDefinition = {
   name: string;
   category: ToolCategory;
   description: string;
-  icon: "zap" | "activity" | "cable" | "shield" | "shield-check" | "gauge";
+  icon: "zap" | "activity" | "cable" | "shield" | "shield-check" | "gauge" | "battery";
 };
 
 export const tools: ToolDefinition[] = [
@@ -62,6 +62,14 @@ export const tools: ToolDefinition[] = [
     description:
       "Check that the connected circuit burden of a metering CT sits within 25–100 % of its rated VA burden (BS EN 61869-2), so it stays within its guaranteed accuracy class.",
     icon: "gauge",
+  },
+  {
+    slug: "battery-sizing",
+    name: "DC Battery Sizing",
+    category: "Power Systems",
+    description:
+      "Size a substation tripping battery from standing loads (amps or watts) plus a defined number of switchgear open, close, and spring-charge operations.",
+    icon: "battery",
   },
 ];
 

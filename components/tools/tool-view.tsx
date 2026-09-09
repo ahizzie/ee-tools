@@ -1,5 +1,6 @@
 "use client";
 
+import { BatterySizingCalculator } from "@/components/tools/battery-sizing-calculator";
 import { MeteringCtBurdenCalculator } from "@/components/tools/metering-ct-burden-calculator";
 import { OhmsLawCalculator } from "@/components/tools/ohms-law-calculator";
 import { ProtectionCtAlfCalculator } from "@/components/tools/protection-ct-alf-calculator";
@@ -14,6 +15,7 @@ const calculators = {
   "protection-curves": ProtectionCurvesCalculator,
   "protection-ct-alf": ProtectionCtAlfCalculator,
   "metering-ct-burden": MeteringCtBurdenCalculator,
+  "battery-sizing": BatterySizingCalculator,
 } as const;
 
 export function ToolView({ slug }: { slug: string }) {
