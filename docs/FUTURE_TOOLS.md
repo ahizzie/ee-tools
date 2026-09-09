@@ -1,38 +1,38 @@
 # Future tools (backlog)
 
-Ideas to implement after the MVP calculators. Do not treat these as in-scope until you explicitly start one.
+Ideas that are **not** in scope until you explicitly start one. Live calculators are on the home page; this file is only what remains.
 
-## 1. Cable rating lookup (AS/NZS 3000)
+## Cable rating lookup (AS/NZS 3000)
 
 Simple table lookup of current-carrying capacity from AS/NZS 3000 rating tables, given cable size, type, installation method, and related factors.
 
 Notes:
 
-- Distinct from the MVP IEC voltage-drop calculator.
+- Distinct from the IEC voltage-drop calculator (resistivity + optional reactance only).
 - Source tables must be cited; do not invent ampacity values.
+- Same family as the deferred AS/NZS CCC tool below — implement once, with cited tables.
 
-## 2. Protection curve plotting
+## Other remaining ideas
 
-Plot time–current curves for multiple protective devices on one chart, using overcurrent pickup, time delay, instantaneous (and similar) settings.
+- Power ↔ current conversion (amps ↔ kW from voltage and PF). Overlaps the 3-phase tool; keep a dedicated converter only if the UX is faster for that job.
 
-Notes:
+## Deferred from later epics
 
-- Needs overlay of several devices.
-- Formula/curve math belongs in `lib/calc/`, not in the chart component.
+Tracked here so the backlog matches the product (not in the current assumptions / validation work):
 
-## 3. Power ↔ current conversion
+- Shareable URLs for calculator state
+- Copy results / copy link
+- Worked-example presets (“load example”)
+- Home search filtering of tool cards
+- AS/NZS 3000 current-carrying capacity (CCC) tool
+- Protection-curve depth (CT ratio on the TCC, extra characteristics, manufacturer fuse files)
 
-Convert between amps and kW (and vice versa) from voltage and power factor.
+## Already live (do not re-add)
 
-Notes:
-
-- Overlaps with the 3-phase power tool; keep a dedicated simple converter if the UX is faster for this job.
-
-## 4. Substation backup / tripping battery sizing
-
-Size a DC battery system for standing loads plus a defined number of switchgear open/close operations.
-
-Notes:
-
-- Inputs: list of standing loads; operation counts for open/close of specified switchgear.
-- Show the method/equations used on the results card.
+- Ohm’s law & power — `ohms-law`
+- 3-phase power & current — `three-phase`
+- AC voltage drop (simplified IEC resistivity + optional reactance) — `voltage-drop`
+- IDMT protection curves (IEC 60255-151, optional generic fuse overlays) — `protection-curves`
+- Protection CT ALF — `protection-ct-alf`
+- Metering CT burden — `metering-ct-burden`
+- DC / substation tripping-battery sizing — `battery-sizing`

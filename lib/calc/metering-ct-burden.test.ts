@@ -52,4 +52,22 @@ describe("meteringCtBurden", () => {
   it("rejects a non-positive rated burden", () => {
     expect(() => meteringCtBurden({ ...sheetExample, ratedBurdenVa: 0 })).toThrow();
   });
+
+  it("rejects voltage deviation, negative length, and oversized CSA", () => {
+    expect(() => meteringCtBurden({ ...sheetExample, voltageDeviationPu: 0 })).toThrow(
+      /Voltage deviation/,
+    );
+    expect(() => meteringCtBurden({ ...sheetExample, voltageDeviationPu: 2 })).toThrow(
+      /Voltage deviation/,
+    );
+    expect(() => meteringCtBurden({ ...sheetExample, wiringLengthM: -10 })).toThrow(
+      /Wiring length must be ≥ 0/,
+    );
+    expect(() => meteringCtBurden({ ...sheetExample, wiringCsaMm2: 0 })).toThrow(
+      /Wiring cross-section/,
+    );
+    expect(() => meteringCtBurden({ ...sheetExample, extraResistanceOhm: -0.1 })).toThrow(
+      /Extra resistance must be ≥ 0/,
+    );
+  });
 });

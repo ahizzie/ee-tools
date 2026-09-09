@@ -1,3 +1,5 @@
+import { assertNonNegative, assertPositive } from "./assert";
+
 export type OhmsLawInput = {
   voltage?: number | null;
   current?: number | null;
@@ -23,6 +25,11 @@ export function ohmsLaw(input: OhmsLawInput): OhmsLawResult {
   const r = isPresent(input.resistance) ? input.resistance : null;
   const p = isPresent(input.power) ? input.power : null;
 
+  if (v !== null) assertNonNegative(v, "Voltage");
+  if (i !== null) assertNonNegative(i, "Current");
+  if (r !== null) assertPositive(r, "Resistance");
+  if (p !== null) assertNonNegative(p, "Power");
+
   if (v !== null && i !== null) {
     if (i === 0) {
       throw new Error("Current must be non-zero when solving from V and I.");
@@ -39,9 +46,6 @@ export function ohmsLaw(input: OhmsLawInput): OhmsLawResult {
   }
 
   if (v !== null && r !== null) {
-    if (r === 0) {
-      throw new Error("Resistance must be non-zero when solving from V and R.");
-    }
     const current = v / r;
     const power = v * current;
     return {
@@ -99,9 +103,6 @@ export function ohmsLaw(input: OhmsLawInput): OhmsLawResult {
   }
 
   if (p !== null && r !== null) {
-    if (p < 0 || r <= 0) {
-      throw new Error("Power must be ≥ 0 and resistance > 0 when solving from P and R.");
-    }
     const current = Math.sqrt(p / r);
     const voltage = current * r;
     return {

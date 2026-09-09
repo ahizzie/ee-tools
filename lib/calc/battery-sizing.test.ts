@@ -97,6 +97,30 @@ describe("batterySizing", () => {
     expect(() => batterySizing({ ...textbook, voltageV: 0 })).toThrow(/voltage/i);
   });
 
+  it("rejects negative standing load current", () => {
+    expect(() =>
+      batterySizing({
+        ...textbook,
+        standingLoads: [{ name: "Bad", currentA: -2 }],
+      }),
+    ).toThrow(/current must be ≥ 0/i);
+  });
+
+  it("rejects fractional switchgear quantity and factor ranges", () => {
+    expect(() =>
+      batterySizing({
+        ...textbook,
+        switchgear: [{ ...textbook.switchgear[0], quantity: 1.5 }],
+      }),
+    ).toThrow(/whole number/);
+    expect(() => batterySizing({ ...textbook, ageingFactor: 0.5 })).toThrow(/Ageing factor/);
+    expect(() => batterySizing({ ...textbook, temperatureFactor: 0 })).toThrow(
+      /Temperature factor/,
+    );
+    expect(() => batterySizing({ ...textbook, designMargin: 0.5 })).toThrow(/Design margin/);
+    expect(() => batterySizing({ ...textbook, autonomyH: 800 })).toThrow(/Autonomy must be ≤ 720/);
+  });
+
   it("rejects an empty duty", () => {
     expect(() =>
       batterySizing({ ...textbook, standingLoads: [], switchgear: [] }),

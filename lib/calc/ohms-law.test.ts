@@ -36,4 +36,22 @@ describe("ohmsLaw", () => {
   it("throws when fewer than two independent values are given", () => {
     expect(() => ohmsLaw({ voltage: 12 })).toThrow(/Enter any two/);
   });
+
+  it("rejects negative current instead of returning negative R or P", () => {
+    expect(() => ohmsLaw({ voltage: 12, current: -2 })).toThrow(/Current must be ≥ 0/);
+  });
+
+  it("rejects negative voltage, resistance, and power", () => {
+    expect(() => ohmsLaw({ voltage: -12, current: 2 })).toThrow(/Voltage must be ≥ 0/);
+    expect(() => ohmsLaw({ voltage: 12, resistance: -6 })).toThrow(
+      /Resistance must be greater than zero/,
+    );
+    expect(() => ohmsLaw({ power: -24, voltage: 12 })).toThrow(/Power must be ≥ 0/);
+  });
+
+  it("rejects zero resistance", () => {
+    expect(() => ohmsLaw({ voltage: 12, resistance: 0 })).toThrow(
+      /Resistance must be greater than zero/,
+    );
+  });
 });

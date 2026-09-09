@@ -1,3 +1,5 @@
+import { assertInRange, assertNonNegative, assertPositive } from "./assert";
+
 /**
  * Protection CT accuracy-limit-factor (ALF) adequacy check.
  *
@@ -13,6 +15,12 @@
 
 /** Resistivity of copper in Ω·m (matches the source workbook's 1.72e-8). */
 export const COPPER_RESISTIVITY_OHM_M = 1.72e-8;
+
+export const RATED_ALF_MIN = 1;
+export const RATED_ALF_MAX = 100;
+export const SAFETY_FACTOR_MIN = 0.5;
+export const SAFETY_FACTOR_MAX = 10;
+export const WIRING_CSA_MAX_MM2 = 1000;
 
 export type ProtectionCtInput = {
   /** CT primary rating, A (CTp). */
@@ -65,16 +73,19 @@ export function protectionCtAlf(input: ProtectionCtInput): ProtectionCtResult {
     safetyFactor,
   } = input;
 
-  if (!(ctPrimaryA > 0)) throw new Error("CT primary must be greater than zero.");
-  if (!(ctSecondaryA > 0)) throw new Error("CT secondary must be greater than zero.");
-  if (!(ratedAlf > 0)) throw new Error("Rated ALF must be greater than zero.");
-  if (!(minFaultCurrentA >= 0)) throw new Error("Fault current must be ≥ 0.");
-  if (!(ratedBurdenVa > 0)) throw new Error("Rated burden must be greater than zero.");
-  if (!(ctResistanceOhm >= 0)) throw new Error("CT resistance must be ≥ 0.");
-  if (!(relayResistanceOhm >= 0)) throw new Error("Relay burden must be ≥ 0.");
-  if (!(wiringLengthM >= 0)) throw new Error("Wiring length must be ≥ 0.");
-  if (!(wiringCsaMm2 > 0)) throw new Error("Wiring cross-section must be greater than zero.");
-  if (!(safetyFactor > 0)) throw new Error("Safety factor must be greater than zero.");
+  assertPositive(ctPrimaryA, "CT primary");
+  assertPositive(ctSecondaryA, "CT secondary");
+  assertInRange(ratedAlf, RATED_ALF_MIN, RATED_ALF_MAX, "Rated ALF");
+  assertNonNegative(minFaultCurrentA, "Fault current");
+  assertPositive(ratedBurdenVa, "Rated burden");
+  assertNonNegative(ctResistanceOhm, "CT resistance");
+  assertNonNegative(relayResistanceOhm, "Relay burden");
+  assertNonNegative(wiringLengthM, "Wiring length");
+  assertPositive(wiringCsaMm2, "Wiring cross-section");
+  if (wiringCsaMm2 > WIRING_CSA_MAX_MM2) {
+    throw new Error(`Wiring cross-section must be ≤ ${WIRING_CSA_MAX_MM2} mm².`);
+  }
+  assertInRange(safetyFactor, SAFETY_FACTOR_MIN, SAFETY_FACTOR_MAX, "Safety factor");
 
   // Rw = ρ / A · (2·L). CSA is mm², so convert to m² (×1e-6).
   const wiringResistanceOhm =

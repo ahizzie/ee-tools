@@ -51,4 +51,20 @@ describe("protectionCtAlf", () => {
   it("rejects a non-positive CT primary", () => {
     expect(() => protectionCtAlf({ ...sheetExample, ctPrimaryA: 0 })).toThrow();
   });
+
+  it("rejects rated ALF, safety factor, and CSA outside sensible ranges", () => {
+    expect(() => protectionCtAlf({ ...sheetExample, ratedAlf: 0 })).toThrow(/Rated ALF/);
+    expect(() => protectionCtAlf({ ...sheetExample, ratedAlf: 250 })).toThrow(/Rated ALF/);
+    expect(() => protectionCtAlf({ ...sheetExample, safetyFactor: 0 })).toThrow(/Safety factor/);
+    expect(() => protectionCtAlf({ ...sheetExample, safetyFactor: 20 })).toThrow(/Safety factor/);
+    expect(() => protectionCtAlf({ ...sheetExample, wiringCsaMm2: 0 })).toThrow(
+      /Wiring cross-section/,
+    );
+    expect(() => protectionCtAlf({ ...sheetExample, wiringCsaMm2: 2000 })).toThrow(
+      /Wiring cross-section/,
+    );
+    expect(() => protectionCtAlf({ ...sheetExample, wiringLengthM: -1 })).toThrow(
+      /Wiring length must be ≥ 0/,
+    );
+  });
 });
