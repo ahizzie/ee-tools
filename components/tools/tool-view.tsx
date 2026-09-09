@@ -1,6 +1,8 @@
 "use client";
 
+import { MeteringCtBurdenCalculator } from "@/components/tools/metering-ct-burden-calculator";
 import { OhmsLawCalculator } from "@/components/tools/ohms-law-calculator";
+import { ProtectionCtAlfCalculator } from "@/components/tools/protection-ct-alf-calculator";
 import { ProtectionCurvesCalculator } from "@/components/tools/protection-curves-calculator";
 import { ThreePhaseCalculator } from "@/components/tools/three-phase-calculator";
 import { VoltageDropCalculator } from "@/components/tools/voltage-drop-calculator";
@@ -10,6 +12,8 @@ const calculators = {
   "three-phase": ThreePhaseCalculator,
   "voltage-drop": VoltageDropCalculator,
   "protection-curves": ProtectionCurvesCalculator,
+  "protection-ct-alf": ProtectionCtAlfCalculator,
+  "metering-ct-burden": MeteringCtBurdenCalculator,
 } as const;
 
 export function ToolView({ slug }: { slug: string }) {

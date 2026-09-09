@@ -11,7 +11,7 @@ export type ToolDefinition = {
   name: string;
   category: ToolCategory;
   description: string;
-  icon: "zap" | "activity" | "cable" | "shield";
+  icon: "zap" | "activity" | "cable" | "shield" | "shield-check" | "gauge";
 };
 
 export const tools: ToolDefinition[] = [
@@ -46,6 +46,22 @@ export const tools: ToolDefinition[] = [
     description:
       "Plot IEC 60255-151 time–current curves for several devices: Standard, Very, Extremely, and Long-time Inverse, plus independent (definite) time, with I> pickup, TMS, and optional I>>.",
     icon: "shield",
+  },
+  {
+    slug: "protection-ct-alf",
+    name: "Protection CT Sizing (ALF)",
+    category: "Power Systems",
+    description:
+      "Check that a protection CT's accuracy limit factor (the 20 in 5P20) stays adequate once lead and relay burden are included, so it does not saturate at the fault level. Effective ALF must exceed the required ALF.",
+    icon: "shield-check",
+  },
+  {
+    slug: "metering-ct-burden",
+    name: "Metering CT Burden",
+    category: "Power Systems",
+    description:
+      "Check that the connected circuit burden of a metering CT sits within 25–100 % of its rated VA burden (BS EN 61869-2), so it stays within its guaranteed accuracy class.",
+    icon: "gauge",
   },
 ];
 

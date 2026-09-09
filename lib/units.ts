@@ -29,6 +29,12 @@ export const powerUnits: UnitOption[] = [
   { value: "MW", label: "MW", factor: 1e6 },
 ];
 
+export const apparentPowerUnits: UnitOption[] = [
+  { value: "VA", label: "VA", factor: 1 },
+  { value: "kVA", label: "kVA", factor: 1e3 },
+  { value: "MVA", label: "MVA", factor: 1e6 },
+];
+
 export const lengthUnits: UnitOption[] = [
   { value: "m", label: "m", factor: 1 },
   { value: "km", label: "km", factor: 1e3 },
