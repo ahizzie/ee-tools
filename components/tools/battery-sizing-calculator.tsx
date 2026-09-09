@@ -1,17 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { NumericInput } from "@/components/calculators/numeric-input";
 import { ResultCard, ResultRow } from "@/components/calculators/result-card";
+import { useToolChrome } from "@/components/tools/use-tool-chrome";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  batterySizingCodec,
+  batterySizingDefaults,
+  batterySizingExamples,
+  type BatteryLoadState,
+  type BatterySwitchgearState,
+} from "@/config/tool-share";
 import {
   BATTERY_SIZING_EQUATION,
   batterySizing,
   type StandingLoad,
   type SwitchgearDuty,
 } from "@/lib/calc/battery-sizing";
+import type { ToolSnapshot } from "@/lib/copy-results";
+import { useShareableState } from "@/lib/use-shareable-state";
 import {
   currentUnits,
   formatNumber,
@@ -24,39 +34,22 @@ import {
   type UnitOption,
 } from "@/lib/units";
 
-type LoadForm = {
-  id: string;
-  name: string;
-  power: string;
-  powerUnit: string;
-  current: string;
-  currentUnit: string;
-  lastEdited: "power" | "current";
-};
-
-type SwitchgearForm = {
-  id: string;
-  name: string;
-  quantity: string;
-  tripCurrent: string;
-  tripCurrentUnit: string;
-  tripDuration: string;
-  tripDurationUnit: string;
-  tripOperations: string;
-  closeCurrent: string;
-  closeCurrentUnit: string;
-  closeDuration: string;
-  closeDurationUnit: string;
-  closeOperations: string;
-  motorCurrent: string;
-  motorCurrentUnit: string;
-  motorDuration: string;
-  motorDurationUnit: string;
-  motorOperations: string;
-};
+type LoadForm = BatteryLoadState;
+type SwitchgearForm = BatterySwitchgearState;
 
 let nextLoad = 3;
 let nextSwitchgear = 2;
+
+function bumpBatteryCounters(loads: LoadForm[], switchgear: SwitchgearForm[]) {
+  for (const load of loads) {
+    const match = /^load-(\d+)$/.exec(load.id);
+    if (match) nextLoad = Math.max(nextLoad, Number(match[1]) + 1);
+  }
+  for (const item of switchgear) {
+    const match = /^swg-(\d+)$/.exec(item.id);
+    if (match) nextSwitchgear = Math.max(nextSwitchgear, Number(match[1]) + 1);
+  }
+}
 
 function unitFactor(units: UnitOption[], unit: string): number {
   return units.find((option) => option.value === unit)?.factor ?? 1;
@@ -72,6 +65,10 @@ function formatInputNumber(value: number): string {
 
 function displayFromBase(base: number, units: UnitOption[], unit: string): string {
   return formatInputNumber(fromBase(base, unitFactor(units, unit)));
+}
+
+function editedField(value: string): "power" | "current" {
+  return value === "current" ? "current" : "power";
 }
 
 function voltageBaseFrom(raw: string, unit: string): number | null {
@@ -121,7 +118,7 @@ function newLoad(
     lastEdited: "power",
     ...overrides,
   };
-  return voltageV === null ? load : syncLoad(load, voltageV, load.lastEdited);
+  return voltageV === null ? load : syncLoad(load, voltageV, editedField(load.lastEdited));
 }
 
 function newSwitchgear(
@@ -158,36 +155,48 @@ function requireNumber(raw: string, label: string): number {
 }
 
 export function BatterySizingCalculator() {
-  const [voltage, setVoltage] = useState("110");
-  const [voltageUnit, setVoltageUnit] = useState("V");
-  const [autonomy, setAutonomy] = useState("3");
-  const [autonomyUnit, setAutonomyUnit] = useState("h");
-  const [ageing, setAgeing] = useState("1.25");
-  const [temperature, setTemperature] = useState("1");
-  const [margin, setMargin] = useState("1.1");
-  const [loads, setLoads] = useState<LoadForm[]>([
-    {
-      id: "load-1",
-      name: "Protection & control",
-      power: "220",
-      powerUnit: "W",
-      current: "2",
-      currentUnit: "A",
-      lastEdited: "power",
+  const [state, setState] = useShareableState(batterySizingDefaults, batterySizingCodec);
+  const voltage = state.voltage;
+  const voltageUnit = state.voltageUnit;
+  const autonomy = state.autonomy;
+  const autonomyUnit = state.autonomyUnit;
+  const ageing = state.ageing;
+  const temperature = state.temperature;
+  const margin = state.margin;
+  const loads = state.loads;
+  const switchgear = state.switchgear;
+
+  const setVoltage = (value: string) => setState((current) => ({ ...current, voltage: value }));
+  const setVoltageUnit = (value: string) =>
+    setState((current) => ({ ...current, voltageUnit: value }));
+  const setAutonomy = (value: string) => setState((current) => ({ ...current, autonomy: value }));
+  const setAutonomyUnit = (value: string) =>
+    setState((current) => ({ ...current, autonomyUnit: value }));
+  const setAgeing = (value: string) => setState((current) => ({ ...current, ageing: value }));
+  const setTemperature = (value: string) =>
+    setState((current) => ({ ...current, temperature: value }));
+  const setMargin = (value: string) => setState((current) => ({ ...current, margin: value }));
+  const setLoads = useCallback(
+    (action: LoadForm[] | ((current: LoadForm[]) => LoadForm[])) => {
+      setState((current) => {
+        const loads = typeof action === "function" ? action(current.loads) : action;
+        bumpBatteryCounters(loads, current.switchgear);
+        return { ...current, loads };
+      });
     },
-    {
-      id: "load-2",
-      name: "Indication lamps",
-      power: "55",
-      powerUnit: "W",
-      current: "0.5",
-      currentUnit: "A",
-      lastEdited: "power",
+    [setState],
+  );
+  const setSwitchgear = useCallback(
+    (action: SwitchgearForm[] | ((current: SwitchgearForm[]) => SwitchgearForm[])) => {
+      setState((current) => {
+        const switchgear =
+          typeof action === "function" ? action(current.switchgear) : action;
+        bumpBatteryCounters(current.loads, switchgear);
+        return { ...current, switchgear };
+      });
     },
-  ]);
-  const [switchgear, setSwitchgear] = useState<SwitchgearForm[]>([
-    newSwitchgear("11 kV CB", { id: "swg-1", quantity: "4" }),
-  ]);
+    [setState],
+  );
 
   const parsed = useMemo(() => {
     try {
@@ -291,7 +300,7 @@ export function BatterySizingCalculator() {
     const voltageV = voltageBaseFrom(nextVoltage, nextUnit);
     if (voltageV === null) return;
     setLoads((current) =>
-      current.map((load) => syncLoad(load, voltageV, load.lastEdited)),
+      current.map((load) => syncLoad(load, voltageV, editedField(load.lastEdited))),
     );
   }
 
@@ -315,6 +324,68 @@ export function BatterySizingCalculator() {
       current.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
   }
+
+  const snapshot = useMemo<ToolSnapshot>(() => {
+    const inputs = [
+      { label: "Nominal DC voltage", value: `${voltage} ${voltageUnit}` },
+      { label: "Autonomy", value: `${autonomy} ${autonomyUnit}` },
+      { label: "Ageing factor", value: ageing },
+      { label: "Temperature factor", value: temperature },
+      { label: "Design margin", value: margin },
+      ...loads.map((load, index) => ({
+        label: `Standing load ${index + 1}`,
+        value: `${load.name}: ${load.power} ${load.powerUnit} / ${load.current} ${load.currentUnit}`,
+      })),
+      ...switchgear.map((item, index) => ({
+        label: `Switchgear ${index + 1}`,
+        value: `${item.name} × ${item.quantity}; trip ${item.tripCurrent} ${item.tripCurrentUnit} × ${item.tripDuration} ${item.tripDurationUnit} × ${item.tripOperations}`,
+      })),
+    ];
+    if (!parsed.ok) return { inputs, outputs: [], error: parsed.message };
+    return {
+      inputs,
+      outputs: [
+        { label: "Standing current", value: `${formatNumber(parsed.result.standingCurrentA, 3)} A` },
+        { label: "Standing charge", value: `${formatNumber(parsed.result.standingAh, 3)} Ah` },
+        { label: "Operations charge", value: `${formatNumber(parsed.result.operationsAh, 4)} Ah` },
+        { label: "Uncorrected capacity", value: `${formatNumber(parsed.result.uncorrectedAh, 3)} Ah` },
+        { label: "Required capacity", value: `${formatNumber(parsed.result.requiredAh, 3)} Ah` },
+        {
+          label: "Suggested C10 size",
+          value:
+            parsed.result.suggestedAh === null
+              ? "Above 1000 Ah — specify a larger string"
+              : `${parsed.result.suggestedAh} Ah`,
+        },
+        {
+          label: "Peak current",
+          value: `${formatNumber(parsed.result.peakCurrentA, 3)} A`,
+        },
+      ],
+    };
+  }, [
+    voltage,
+    voltageUnit,
+    autonomy,
+    autonomyUnit,
+    ageing,
+    temperature,
+    margin,
+    loads,
+    switchgear,
+    parsed,
+  ]);
+
+  useToolChrome({
+    state,
+    codec: batterySizingCodec,
+    examples: batterySizingExamples,
+    snapshot,
+    applyExample: (example) => {
+      bumpBatteryCounters(example.state.loads, example.state.switchgear);
+      setState(example.state);
+    },
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

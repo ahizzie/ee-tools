@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo } from "react";
 import { NumericInput } from "@/components/calculators/numeric-input";
 import { ResultCard, ResultRow } from "@/components/calculators/result-card";
+import { useToolChrome } from "@/components/tools/use-tool-chrome";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,7 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  meteringCtBurdenCodec,
+  meteringCtBurdenDefaults,
+  meteringCtBurdenExamples,
+} from "@/config/tool-share";
 import { meteringCtBurden } from "@/lib/calc/metering-ct-burden";
+import type { ToolSnapshot } from "@/lib/copy-results";
+import { useShareableState } from "@/lib/use-shareable-state";
 import {
   apparentPowerUnits,
   currentUnits,
@@ -40,41 +48,32 @@ const VERDICT = {
 } as const;
 
 export function MeteringCtBurdenCalculator() {
-  const [load, setLoad] = useState("50");
-  const [loadUnit, setLoadUnit] = useState("MVA");
-  const [voltage, setVoltage] = useState("33");
-  const [voltageUnit, setVoltageUnit] = useState("kV");
-  const [vpu, setVpu] = useState("0.94");
-  const [ctp, setCtp] = useState("1000");
-  const [ctpUnit, setCtpUnit] = useState("A");
-  const [cts, setCts] = useState("1");
-  const [length, setLength] = useState("40");
-  const [lengthUnit, setLengthUnit] = useState("m");
-  const [csa, setCsa] = useState("2.5");
-  const [rr, setRr] = useState("0.1");
-  const [rrUnit, setRrUnit] = useState("Ω");
-  const [rextra, setRextra] = useState("0");
-  const [rextraUnit, setRextraUnit] = useState("Ω");
-  const [burden, setBurden] = useState("10");
+  const [state, setState] = useShareableState(meteringCtBurdenDefaults, meteringCtBurdenCodec);
+  const setField = useCallback(
+    <K extends keyof typeof state>(key: K, value: (typeof state)[K]) => {
+      setState((current) => ({ ...current, [key]: value }));
+    },
+    [setState],
+  );
 
-  const loadf = apparentPowerUnits.find((u) => u.value === loadUnit)?.factor ?? 1;
-  const vf = voltageUnits.find((u) => u.value === voltageUnit)?.factor ?? 1;
-  const ctpf = currentUnits.find((u) => u.value === ctpUnit)?.factor ?? 1;
-  const lf = lengthUnits.find((u) => u.value === lengthUnit)?.factor ?? 1;
-  const rrf = resistanceUnits.find((u) => u.value === rrUnit)?.factor ?? 1;
-  const rextraf = resistanceUnits.find((u) => u.value === rextraUnit)?.factor ?? 1;
+  const loadf = apparentPowerUnits.find((u) => u.value === state.loadUnit)?.factor ?? 1;
+  const vf = voltageUnits.find((u) => u.value === state.voltageUnit)?.factor ?? 1;
+  const ctpf = currentUnits.find((u) => u.value === state.ctPrimaryUnit)?.factor ?? 1;
+  const lf = lengthUnits.find((u) => u.value === state.lengthUnit)?.factor ?? 1;
+  const rrf = resistanceUnits.find((u) => u.value === state.meterRUnit)?.factor ?? 1;
+  const rextraf = resistanceUnits.find((u) => u.value === state.extraRUnit)?.factor ?? 1;
 
   const values = {
-    loadCapacityVa: parseOptionalNumber(load),
-    voltageV: parseOptionalNumber(voltage),
-    voltageDeviationPu: parseOptionalNumber(vpu),
-    ctPrimaryA: parseOptionalNumber(ctp),
-    ctSecondaryA: parseOptionalNumber(cts),
-    wiringLengthM: parseOptionalNumber(length),
-    wiringCsaMm2: parseOptionalNumber(csa),
-    meterResistanceOhm: parseOptionalNumber(rr),
-    extraResistanceOhm: parseOptionalNumber(rextra),
-    ratedBurdenVa: parseOptionalNumber(burden),
+    loadCapacityVa: parseOptionalNumber(state.load),
+    voltageV: parseOptionalNumber(state.voltage),
+    voltageDeviationPu: parseOptionalNumber(state.vpu),
+    ctPrimaryA: parseOptionalNumber(state.ctPrimary),
+    ctSecondaryA: parseOptionalNumber(state.ctSecondary),
+    wiringLengthM: parseOptionalNumber(state.length),
+    wiringCsaMm2: parseOptionalNumber(state.csa),
+    meterResistanceOhm: parseOptionalNumber(state.meterR),
+    extraResistanceOhm: parseOptionalNumber(state.extraR),
+    ratedBurdenVa: parseOptionalNumber(state.burden),
   };
 
   const equationFallback =
@@ -105,46 +104,85 @@ export function MeteringCtBurdenCalculator() {
 
   const verdict = result ? VERDICT[result.status] : null;
 
+  const snapshot = useMemo<ToolSnapshot>(() => {
+    const inputs = [
+      { label: "Load capacity", value: `${state.load} ${state.loadUnit}` },
+      { label: "System voltage (line-to-line)", value: `${state.voltage} ${state.voltageUnit}` },
+      { label: "Voltage deviation", value: `${state.vpu} p.u.` },
+      { label: "CT primary", value: `${state.ctPrimary} ${state.ctPrimaryUnit}` },
+      { label: "CT secondary", value: `${state.ctSecondary} A` },
+      { label: "Wiring loop length", value: `${state.length} ${state.lengthUnit}` },
+      { label: "Wiring cross-section", value: `${state.csa} mm²` },
+      { label: "Meter / relay resistance", value: `${state.meterR} ${state.meterRUnit}` },
+      { label: "Extra resistance", value: `${state.extraR} ${state.extraRUnit}` },
+      { label: "Chosen CT rated burden", value: `${state.burden} VA` },
+    ];
+    if (!result || !verdict) return { inputs, outputs: [], error: message ?? "Invalid input" };
+    return {
+      inputs,
+      outputs: [
+        { label: "Status", value: verdict.text },
+        { label: "Circuit burden (Btot)", value: `${formatNumber(result.circuitBurdenVa, 4)} VA` },
+        { label: "Circuit burden vs rated", value: `${formatNumber(result.percentOfRated, 2)} %` },
+        {
+          label: "Accuracy band (25–100 %)",
+          value: `${formatNumber(result.minBurdenVa, 3)} – ${formatNumber(result.maxBurdenVa, 3)} VA`,
+        },
+        { label: "Load current (Il)", value: `${formatNumber(result.loadCurrentA, 2)} A` },
+        { label: "Secondary current (Is)", value: `${formatNumber(result.secondaryCurrentA, 4)} A` },
+        { label: "Wiring resistance (Rw)", value: `${formatNumber(result.wiringResistanceOhm, 4)} Ω` },
+      ],
+    };
+  }, [state, result, verdict, message]);
+
+  useToolChrome({
+    state,
+    codec: meteringCtBurdenCodec,
+    examples: meteringCtBurdenExamples,
+    snapshot,
+    applyExample: (example) => setState(example.state),
+  });
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <NumericInput
           id="mct-load"
           label="Load capacity"
-          value={load}
-          onChange={setLoad}
-          unit={loadUnit}
+          value={state.load}
+          onChange={(value) => setField("load", value)}
+          unit={state.loadUnit}
           units={apparentPowerUnits}
-          onUnitChange={setLoadUnit}
+          onUnitChange={(unit) => setField("loadUnit", unit)}
         />
         <NumericInput
           id="mct-v"
           label="System voltage (line-to-line)"
-          value={voltage}
-          onChange={setVoltage}
-          unit={voltageUnit}
+          value={state.voltage}
+          onChange={(value) => setField("voltage", value)}
+          unit={state.voltageUnit}
           units={voltageUnits}
-          onUnitChange={setVoltageUnit}
+          onUnitChange={(unit) => setField("voltageUnit", unit)}
         />
         <NumericInput
           id="mct-vpu"
           label="Voltage deviation"
-          value={vpu}
-          onChange={setVpu}
+          value={state.vpu}
+          onChange={(value) => setField("vpu", value)}
           unit="p.u."
         />
         <NumericInput
           id="mct-ctp"
           label="CT primary"
-          value={ctp}
-          onChange={setCtp}
-          unit={ctpUnit}
+          value={state.ctPrimary}
+          onChange={(value) => setField("ctPrimary", value)}
+          unit={state.ctPrimaryUnit}
           units={currentUnits}
-          onUnitChange={setCtpUnit}
+          onUnitChange={(unit) => setField("ctPrimaryUnit", unit)}
         />
         <div className="grid gap-1.5">
           <Label>CT secondary</Label>
-          <Select value={cts} onValueChange={(v) => v && setCts(String(v))}>
+          <Select value={state.ctSecondary} onValueChange={(v) => v && setField("ctSecondary", String(v))}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -157,42 +195,42 @@ export function MeteringCtBurdenCalculator() {
         <NumericInput
           id="mct-l"
           label="Wiring loop length"
-          value={length}
-          onChange={setLength}
-          unit={lengthUnit}
+          value={state.length}
+          onChange={(value) => setField("length", value)}
+          unit={state.lengthUnit}
           units={lengthUnits}
-          onUnitChange={setLengthUnit}
+          onUnitChange={(unit) => setField("lengthUnit", unit)}
         />
         <NumericInput
           id="mct-csa"
           label="Wiring cross-section"
-          value={csa}
-          onChange={setCsa}
+          value={state.csa}
+          onChange={(value) => setField("csa", value)}
           unit="mm²"
         />
         <NumericInput
           id="mct-rr"
           label="Meter / relay resistance"
-          value={rr}
-          onChange={setRr}
-          unit={rrUnit}
+          value={state.meterR}
+          onChange={(value) => setField("meterR", value)}
+          unit={state.meterRUnit}
           units={resistanceUnits}
-          onUnitChange={setRrUnit}
+          onUnitChange={(unit) => setField("meterRUnit", unit)}
         />
         <NumericInput
           id="mct-rextra"
           label="Extra resistance"
-          value={rextra}
-          onChange={setRextra}
-          unit={rextraUnit}
+          value={state.extraR}
+          onChange={(value) => setField("extraR", value)}
+          unit={state.extraRUnit}
           units={resistanceUnits}
-          onUnitChange={setRextraUnit}
+          onUnitChange={(unit) => setField("extraRUnit", unit)}
         />
         <NumericInput
           id="mct-b"
           label="Chosen CT rated burden"
-          value={burden}
-          onChange={setBurden}
+          value={state.burden}
+          onChange={(value) => setField("burden", value)}
           unit="VA"
         />
       </div>

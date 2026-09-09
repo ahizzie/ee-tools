@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { NumericInput } from "@/components/calculators/numeric-input";
 import { ResultCard, ResultRow } from "@/components/calculators/result-card";
+import { useToolChrome } from "@/components/tools/use-tool-chrome";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { adiabaticCodec, adiabaticDefaults, adiabaticExamples } from "@/config/tool-share";
 import {
   adiabaticKFactor,
   adiabaticMinSection,
@@ -18,6 +20,8 @@ import {
   type ConductorMaterial,
   type InsulationType,
 } from "@/lib/calc/adiabatic";
+import type { ToolSnapshot } from "@/lib/copy-results";
+import { useShareableState } from "@/lib/use-shareable-state";
 import {
   currentUnits,
   formatNumber,
@@ -30,21 +34,29 @@ import {
 type KMode = InsulationType | "custom-k";
 
 export function AdiabaticCalculator() {
-  const [material, setMaterial] = useState<ConductorMaterial>("copper");
-  const [kMode, setKMode] = useState<KMode>("pvc");
-  const [initialTemp, setInitialTemp] = useState(String(INSULATION_LIMITS.pvc.initialC));
-  const [finalTemp, setFinalTemp] = useState(String(INSULATION_LIMITS.pvc.finalC));
-  const [customK, setCustomK] = useState("115");
-  const [current, setCurrent] = useState("10");
-  const [iUnit, setIUnit] = useState("kA");
-  const [duration, setDuration] = useState("1");
-  const [tUnit, setTUnit] = useState("s");
+  const [state, setState] = useShareableState(adiabaticDefaults, adiabaticCodec);
+  const setField = useCallback(
+    <K extends keyof typeof state>(key: K, value: (typeof state)[K]) => {
+      setState((current) => ({ ...current, [key]: value }));
+    },
+    [setState],
+  );
 
-  const iff = currentUnits.find((u) => u.value === iUnit)?.factor ?? 1;
-  const tf = timeUnits.find((u) => u.value === tUnit)?.factor ?? 1;
+  const material = state.material;
+  const kMode = state.kMode;
+  const initialTemp = state.initialTemp;
+  const finalTemp = state.finalTemp;
+  const customK = state.customK;
+  const faultCurrent = state.current;
+  const currentUnit = state.currentUnit;
+  const duration = state.duration;
+  const timeUnit = state.timeUnit;
+
+  const iff = currentUnits.find((u) => u.value === currentUnit)?.factor ?? 1;
+  const tf = timeUnits.find((u) => u.value === timeUnit)?.factor ?? 1;
 
   const result = useMemo(() => {
-    const currentA = parseOptionalNumber(current);
+    const currentA = parseOptionalNumber(faultCurrent);
     const durationVal = parseOptionalNumber(duration);
     if (currentA === null || durationVal === null) {
       return { ok: false as const, message: "Enter fault current and duration." };
@@ -68,7 +80,7 @@ export function AdiabaticCalculator() {
           };
         }
         k = adiabaticKFactor({
-          material,
+          material: material as ConductorMaterial,
           initialTempC: thetaI,
           finalTempC: thetaF,
         });
@@ -94,19 +106,60 @@ export function AdiabaticCalculator() {
     initialTemp,
     finalTemp,
     customK,
-    current,
+    faultCurrent,
     duration,
     iff,
     tf,
   ]);
 
   function applyInsulation(next: KMode) {
-    setKMode(next);
     if (next === "pvc" || next === "xlpe") {
-      setInitialTemp(String(INSULATION_LIMITS[next].initialC));
-      setFinalTemp(String(INSULATION_LIMITS[next].finalC));
+      setState((current) => ({
+        ...current,
+        kMode: next,
+        initialTemp: String(INSULATION_LIMITS[next].initialC),
+        finalTemp: String(INSULATION_LIMITS[next].finalC),
+      }));
+      return;
     }
+    setField("kMode", next);
   }
+
+  const snapshot: ToolSnapshot = (() => {
+    const inputs = [
+      { label: "Conductor", value: material },
+      { label: "Insulation / k", value: kMode },
+      ...(kMode === "custom-k"
+        ? [{ label: "k-factor", value: customK }]
+        : [
+            { label: "Initial temperature", value: `${initialTemp} °C` },
+            { label: "Final temperature limit", value: `${finalTemp} °C` },
+          ]),
+      { label: "Short-circuit current (rms)", value: `${faultCurrent} ${currentUnit}` },
+      { label: "Fault duration", value: `${duration} ${timeUnit}` },
+    ];
+    if (!result.ok) return { inputs, outputs: [], error: result.message };
+    const outputs = [
+      { label: "Minimum CSA S (mm²)", value: formatNumber(result.value.sectionMm2) },
+      { label: "k-factor", value: formatNumber(result.value.k) },
+      { label: "Let-through I²t (A²s)", value: formatNumber(result.value.energyLetThroughA2s) },
+    ];
+    if (result.value.durationExceedsAdiabaticLimit) {
+      outputs.push({
+        label: "Note",
+        value: "Duration is over 5 s; adiabatic heating no longer applies without a non-adiabatic correction.",
+      });
+    }
+    return { inputs, outputs };
+  })();
+
+  useToolChrome({
+    state,
+    codec: adiabaticCodec,
+    examples: adiabaticExamples,
+    snapshot,
+    applyExample: (example) => setState(example.state),
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -119,9 +172,9 @@ export function AdiabaticCalculator() {
         <div className="grid gap-1.5">
           <Label>Conductor</Label>
           <Select
-            value={material}
+            value={state.material}
             items={{ copper: "Copper", aluminium: "Aluminium" }}
-            onValueChange={(value) => value && setMaterial(value as ConductorMaterial)}
+            onValueChange={(value) => value && setField("material", value)}
           >
             <SelectTrigger className="w-full">
               <SelectValue />
@@ -135,7 +188,7 @@ export function AdiabaticCalculator() {
         <div className="grid gap-1.5">
           <Label>Insulation / k</Label>
           <Select
-            value={kMode}
+            value={state.kMode}
             items={{
               pvc: "PVC (70 → 160 °C)",
               xlpe: "XLPE / EPR (90 → 250 °C)",
@@ -153,28 +206,28 @@ export function AdiabaticCalculator() {
             </SelectContent>
           </Select>
         </div>
-        {kMode === "custom-k" ? (
+        {state.kMode === "custom-k" ? (
           <NumericInput
             id="ad-k"
             label="k-factor"
-            value={customK}
-            onChange={setCustomK}
+            value={state.customK}
+            onChange={(value) => setField("customK", value)}
           />
         ) : (
           <>
             <NumericInput
               id="ad-ti"
               label="Initial temperature"
-              value={initialTemp}
-              onChange={setInitialTemp}
+              value={state.initialTemp}
+              onChange={(value) => setField("initialTemp", value)}
               unit="°C"
               units={temperatureUnits}
             />
             <NumericInput
               id="ad-tf"
               label="Final temperature limit"
-              value={finalTemp}
-              onChange={setFinalTemp}
+              value={state.finalTemp}
+              onChange={(value) => setField("finalTemp", value)}
               unit="°C"
               units={temperatureUnits}
             />
@@ -183,20 +236,20 @@ export function AdiabaticCalculator() {
         <NumericInput
           id="ad-i"
           label="Short-circuit current (rms)"
-          value={current}
-          onChange={setCurrent}
-          unit={iUnit}
+          value={state.current}
+          onChange={(value) => setField("current", value)}
+          unit={state.currentUnit}
           units={currentUnits}
-          onUnitChange={setIUnit}
+          onUnitChange={(unit) => setField("currentUnit", unit)}
         />
         <NumericInput
           id="ad-t"
           label="Fault duration"
-          value={duration}
-          onChange={setDuration}
-          unit={tUnit}
+          value={state.duration}
+          onChange={(value) => setField("duration", value)}
+          unit={state.timeUnit}
           units={timeUnits}
-          onUnitChange={setTUnit}
+          onUnitChange={(unit) => setField("timeUnit", unit)}
         />
       </div>
       {result.ok ? (

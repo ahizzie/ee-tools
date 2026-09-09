@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { NumericInput } from "@/components/calculators/numeric-input";
 import { ResultCard, ResultRow } from "@/components/calculators/result-card";
+import { useToolChrome } from "@/components/tools/use-tool-chrome";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  protectionCurvesCodec,
+  protectionCurvesDefaults,
+  protectionCurvesExamples,
+  type ProtectionDeviceState,
+} from "@/config/tool-share";
 import {
   FUSE_CLASSES,
   GRADING_MARGIN_S,
@@ -37,6 +44,8 @@ import {
   type ProtectionDevice,
   type TripResult,
 } from "@/lib/calc/protection-curves";
+import type { ToolSnapshot } from "@/lib/copy-results";
+import { useShareableState } from "@/lib/use-shareable-state";
 import {
   currentUnits,
   formatNumber,
@@ -66,24 +75,16 @@ const STROKES = ["#1d4ed8", "#b45309", "#15803d", "#be123c", "#6d28d9", "#0f766e
 
 type DeviceKind = "relay" | "fuse";
 
-type DeviceForm = {
-  id: string;
-  name: string;
-  kind: DeviceKind;
-  characteristic: IecCurveId;
-  fuseClass: FuseClassId;
-  pickup: string;
-  pickupUnit: string;
-  ratedCurrent: string;
-  ratedUnit: string;
-  tms: string;
-  definiteTime: string;
-  instPickup: string;
-  instPickupUnit: string;
-  instTime: string;
-};
+type DeviceForm = ProtectionDeviceState;
 
 let nextDevice = 3;
+
+function bumpDeviceCounter(devices: DeviceForm[]) {
+  for (const device of devices) {
+    const match = /^device-(\d+)$/.exec(device.id);
+    if (match) nextDevice = Math.max(nextDevice, Number(match[1]) + 1);
+  }
+}
 
 function newDevice(name: string, overrides: Partial<DeviceForm> = {}): DeviceForm {
   return {
@@ -191,49 +192,34 @@ function FaultLevelResults({
 }
 
 export function ProtectionCurvesCalculator() {
-  const [devices, setDevices] = useState<DeviceForm[]>([
-    {
-      id: "device-1",
-      name: "Feeder",
-      kind: "relay",
-      characteristic: "iec-si",
-      fuseClass: "gg",
-      pickup: "100",
-      pickupUnit: "A",
-      ratedCurrent: "100",
-      ratedUnit: "A",
-      tms: "0.15",
-      definiteTime: "0.4",
-      instPickup: "800",
-      instPickupUnit: "A",
-      instTime: "0.05",
+  const [state, setState] = useShareableState(protectionCurvesDefaults, protectionCurvesCodec);
+  const devices = state.devices;
+  const minFault = state.minFault;
+  const minFaultUnit = state.minFaultUnit;
+  const maxFault = state.maxFault;
+  const maxFaultUnit = state.maxFaultUnit;
+
+  const setDevices = useCallback(
+    (action: DeviceForm[] | ((current: DeviceForm[]) => DeviceForm[])) => {
+      setState((current) => {
+        const devices = typeof action === "function" ? action(current.devices) : action;
+        bumpDeviceCounter(devices);
+        return { ...current, devices };
+      });
     },
-    {
-      id: "device-2",
-      name: "Incomer",
-      kind: "relay",
-      characteristic: "iec-si",
-      fuseClass: "gg",
-      pickup: "250",
-      pickupUnit: "A",
-      ratedCurrent: "250",
-      ratedUnit: "A",
-      tms: "0.35",
-      definiteTime: "1",
-      instPickup: "2000",
-      instPickupUnit: "A",
-      instTime: "0.10",
-    },
-  ]);
-  const [minFault, setMinFault] = useState("800");
-  const [minFaultUnit, setMinFaultUnit] = useState("A");
-  const [maxFault, setMaxFault] = useState("1500");
-  const [maxFaultUnit, setMaxFaultUnit] = useState("A");
+    [setState],
+  );
+  const setMinFault = (value: string) => setState((current) => ({ ...current, minFault: value }));
+  const setMinFaultUnit = (value: string) =>
+    setState((current) => ({ ...current, minFaultUnit: value }));
+  const setMaxFault = (value: string) => setState((current) => ({ ...current, maxFault: value }));
+  const setMaxFaultUnit = (value: string) =>
+    setState((current) => ({ ...current, maxFaultUnit: value }));
 
   const minFf = currentUnits.find((u) => u.value === minFaultUnit)?.factor ?? 1;
   const maxFf = currentUnits.find((u) => u.value === maxFaultUnit)?.factor ?? 1;
 
-  const parsed = useMemo(() => {
+  const parsed = (() => {
     const models: ProtectionDevice[] = [];
     for (const form of devices) {
       if (form.kind === "fuse") {
@@ -246,7 +232,7 @@ export function ProtectionCurvesCalculator() {
           kind: "fuse",
           id: form.id,
           name: form.name.trim() || "Fuse",
-          fuseClass: form.fuseClass,
+          fuseClass: form.fuseClass as FuseClassId,
           ratedCurrentA: toBase(rated, rf),
         });
         continue;
@@ -278,7 +264,7 @@ export function ProtectionCurvesCalculator() {
         kind: "relay",
         id: form.id,
         name: form.name.trim() || "Device",
-        characteristic: form.characteristic,
+        characteristic: form.characteristic as IecCurveId,
         pickupA: toBase(pickup, pf),
         tms: tms ?? 1,
         definiteTimeS: definiteTimeS ?? 0,
@@ -329,7 +315,7 @@ export function ProtectionCurvesCalculator() {
         message: error instanceof Error ? error.message : "Invalid settings",
       };
     }
-  }, [devices, minFault, maxFault, minFf, maxFf]);
+  })();
 
   function updateDevice(id: string, patch: Partial<DeviceForm>) {
     setDevices((current) =>
@@ -353,6 +339,49 @@ export function ProtectionCurvesCalculator() {
     allTimes.length > 0
       ? [Math.max(0.01, Math.min(...allTimes) * 0.7), Math.min(1000, Math.max(...allTimes) * 1.4)]
       : undefined;
+
+  const snapshot: ToolSnapshot = (() => {
+    const inputs = [
+      ...devices.map((device, index) => ({
+        label: `Device ${index + 1}`,
+        value:
+          device.kind === "fuse"
+            ? `${device.name} · fuse ${device.fuseClass} · In ${device.ratedCurrent} ${device.ratedUnit}`
+            : `${device.name} · ${device.characteristic} · I> ${device.pickup} ${device.pickupUnit}${
+                device.characteristic === "definite-time"
+                  ? ` · t> ${device.definiteTime} s`
+                  : ` · TMS ${device.tms}`
+              }${device.instPickup.trim() ? ` · I>> ${device.instPickup} ${device.instPickupUnit}` : ""}`,
+      })),
+      { label: "Minimum Fault Level", value: `${minFault} ${minFaultUnit}` },
+      { label: "Maximum Fault Level", value: `${maxFault} ${maxFaultUnit}` },
+    ];
+    if (!parsed.ok) return { inputs, outputs: [], error: parsed.message };
+    const outputs: ToolSnapshot["outputs"] = [];
+    for (const [title, trips] of [
+      ["Minimum Fault Level", parsed.minTrips],
+      ["Maximum Fault Level", parsed.maxTrips],
+    ] as const) {
+      for (const trip of trips) {
+        outputs.push({
+          label: `${title} · ${trip.name}`,
+          value: trip.ok ? formatTimeS(trip.timeS) : trip.message,
+        });
+      }
+    }
+    return { inputs, outputs };
+  })();
+
+  useToolChrome({
+    state,
+    codec: protectionCurvesCodec,
+    examples: protectionCurvesExamples,
+    snapshot,
+    applyExample: (example) => {
+      bumpDeviceCounter(example.state.devices);
+      setState(example.state);
+    },
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
