@@ -48,6 +48,11 @@ export const temperatureUnits: UnitOption[] = [
   { value: "°C", label: "°C", factor: 1 },
 ];
 
+export const timeUnits: UnitOption[] = [
+  { value: "ms", label: "ms", factor: 1e-3 },
+  { value: "s", label: "s", factor: 1 },
+];
+
 /** Multiply display value by this to get seconds. */
 export const timeUnits: UnitOption[] = [
   { value: "ms", label: "ms", factor: 1e-3 },

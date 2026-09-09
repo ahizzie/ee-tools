@@ -16,11 +16,11 @@ export type ToolDefinition = {
 
 export const tools: ToolDefinition[] = [
   {
-    slug: "ohms-law",
-    name: "Ohm's Law & Power",
-    category: "Electronics",
+    slug: "amps-kw",
+    name: "3-Phase Amps ↔ kW",
+    category: "Power Systems",
     description:
-      "Solve V = I × R and DC power P = V × I. Enter any two values among voltage, current, and resistance (or power plus one other).",
+      "Convert between line current and active power (kW) from line-to-line voltage and power factor on a balanced three-phase system.",
     icon: "zap",
   },
   {
@@ -37,6 +37,14 @@ export const tools: ToolDefinition[] = [
     category: "Cable Sizing",
     description:
       "Simplified IEC voltage drop for copper or aluminium conductors, with temperature, power factor, and optional reactance.",
+    icon: "cable",
+  },
+  {
+    slug: "adiabatic",
+    name: "Adiabatic Short-Circuit CSA",
+    category: "Cable Sizing",
+    description:
+      "Minimum conductor cross-section from the IEC 60364-4-43 / IEC 60949 adiabatic equation S = I√t / k for copper or aluminium cables under short circuit.",
     icon: "cable",
   },
   {

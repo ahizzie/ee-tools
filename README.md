@@ -1,6 +1,6 @@
 # EE Tools
 
-IEC / metric electrical engineering calculators (Ohm's law, three-phase power, AC voltage drop).
+IEC / metric electrical engineering calculators (three-phase amps ↔ kW, voltage drop, adiabatic short-circuit CSA, and related protection tools).
 
 ## Develop
 
