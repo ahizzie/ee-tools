@@ -20,13 +20,9 @@ Notes:
 - Needs overlay of several devices.
 - Formula/curve math belongs in `lib/calc/`, not in the chart component.
 
-## 3. Power ↔ current conversion
+## 3. Power ↔ current conversion — done
 
-Convert between amps and kW (and vice versa) from voltage and power factor.
-
-Notes:
-
-- Overlaps with the 3-phase power tool; keep a dedicated simple converter if the UX is faster for this job.
+Implemented as **3-Phase Amps ↔ kW** (`/tools/amps-kw`), replacing Ohm's law. Still overlaps with the fuller 3-phase power tool.
 
 ## 4. Substation backup / tripping battery sizing
 
