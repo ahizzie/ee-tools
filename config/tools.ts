@@ -14,7 +14,7 @@ export type ToolDefinition = {
   icon: "zap" | "activity" | "cable" | "shield" | "shield-check" | "gauge" | "battery";
 };
 
-export const tools: ToolDefinition[] = [
+export const tools = [
   {
     slug: "amps-kw",
     name: "3-Phase Amps ↔ kW",
@@ -79,7 +79,9 @@ export const tools: ToolDefinition[] = [
       "Size a substation tripping battery from standing loads (amps or watts) plus a defined number of switchgear open, close, and spring-charge operations.",
     icon: "battery",
   },
-];
+] as const satisfies readonly ToolDefinition[];
+
+export type ToolSlug = (typeof tools)[number]["slug"];
 
 export function getTool(slug: string): ToolDefinition | undefined {
   return tools.find((tool) => tool.slug === slug);
@@ -97,7 +99,7 @@ export function getToolsByCategory(): Record<ToolCategory, ToolDefinition[]> {
 
 export function searchTools(query: string): ToolDefinition[] {
   const q = query.trim().toLowerCase();
-  if (!q) return tools;
+  if (!q) return [...tools];
   return tools.filter((tool) => {
     const hay = `${tool.name} ${tool.slug} ${tool.category} ${tool.description}`.toLowerCase();
     return hay.includes(q);

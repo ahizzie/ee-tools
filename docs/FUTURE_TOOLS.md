@@ -1,34 +1,35 @@
 # Future tools (backlog)
 
-Ideas to implement after the MVP calculators. Do not treat these as in-scope until you explicitly start one.
+Ideas that are **not** in scope until you explicitly start one. Live calculators are on the home page; this file is only what remains.
 
-## 1. Cable rating lookup (AS/NZS 3000)
+## Cable rating lookup (AS/NZS 3000)
 
 Simple table lookup of current-carrying capacity from AS/NZS 3000 rating tables, given cable size, type, installation method, and related factors.
 
 Notes:
 
-- Distinct from the MVP IEC voltage-drop calculator.
+- Distinct from the IEC voltage-drop calculator (resistivity + optional reactance only) and from the adiabatic short-circuit CSA tool.
 - Source tables must be cited; do not invent ampacity values.
+- Same family as the deferred AS/NZS CCC tool below — implement once, with cited tables.
 
-## 2. Protection curve plotting
+## Deferred from later epics
 
-Plot time–current curves for multiple protective devices on one chart, using overcurrent pickup, time delay, instantaneous (and similar) settings.
+Tracked here so the backlog matches the product (not in the current assumptions / validation work):
 
-Notes:
+- Shareable URLs for calculator state
+- Copy results / copy link
+- Worked-example presets (“load example”)
+- Home search filtering of tool cards
+- AS/NZS 3000 current-carrying capacity (CCC) tool
+- Protection-curve depth (CT ratio on the TCC, extra characteristics, manufacturer fuse files)
 
-- Needs overlay of several devices.
-- Formula/curve math belongs in `lib/calc/`, not in the chart component.
+## Already live (do not re-add)
 
-## 3. Power ↔ current conversion — done
-
-Implemented as **3-Phase Amps ↔ kW** (`/tools/amps-kw`), replacing Ohm's law. Still overlaps with the fuller 3-phase power tool.
-
-## 4. Substation backup / tripping battery sizing
-
-Size a DC battery system for standing loads plus a defined number of switchgear open/close operations.
-
-Notes:
-
-- Inputs: list of standing loads; operation counts for open/close of specified switchgear.
-- Show the method/equations used on the results card.
+- 3-phase amps ↔ kW — `amps-kw` (replaces Ohm’s law; `/tools/ohms-law` redirects here). Still overlaps the fuller 3-phase power tool.
+- 3-phase power & current — `three-phase`
+- AC voltage drop (simplified IEC resistivity + optional reactance) — `voltage-drop`
+- Adiabatic short-circuit CSA — `adiabatic`
+- IDMT protection curves (IEC 60255-151, optional generic fuse overlays) — `protection-curves`
+- Protection CT ALF — `protection-ct-alf`
+- Metering CT burden — `metering-ct-burden`
+- DC / substation tripping-battery sizing — `battery-sizing`

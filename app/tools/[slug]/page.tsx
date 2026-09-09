@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/layout/print-button";
+import { AssumptionsPanel } from "@/components/tools/assumptions-panel";
 import { ToolView } from "@/components/tools/tool-view";
 import { getTool, tools } from "@/config/tools";
 
@@ -48,6 +49,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
         <PrintButton />
       </div>
       <ToolView slug={tool.slug} />
+      <AssumptionsPanel slug={tool.slug} />
     </article>
   );
 }

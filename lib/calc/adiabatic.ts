@@ -1,3 +1,5 @@
+import { assertInRange, assertPositive } from "./assert";
+
 /** IEC 60949 / IEC 60364-4-43 Annex A material constants for the adiabatic k-factor. */
 export type ConductorMaterial = "copper" | "aluminium";
 
@@ -20,6 +22,10 @@ export type InsulationType = keyof typeof INSULATION_LIMITS;
 /** Duration (s) above which IEC 60364-4-43 treats heating as non-adiabatic. */
 export const ADIABATIC_DURATION_LIMIT_S = 5;
 
+/** Practical window for θ_i / θ_f in the k-factor logarithm. */
+export const ADIABATIC_TEMP_MIN_C = -50;
+export const ADIABATIC_TEMP_MAX_C = 400;
+
 export type AdiabaticKInput = {
   material: ConductorMaterial;
   initialTempC: number;
@@ -28,9 +34,18 @@ export type AdiabaticKInput = {
 
 export function adiabaticKFactor(input: AdiabaticKInput): number {
   const { material, initialTempC, finalTempC } = input;
-  if (!Number.isFinite(initialTempC) || !Number.isFinite(finalTempC)) {
-    throw new Error("Initial and final temperatures must be numbers.");
-  }
+  assertInRange(
+    initialTempC,
+    ADIABATIC_TEMP_MIN_C,
+    ADIABATIC_TEMP_MAX_C,
+    "Initial temperature (°C)",
+  );
+  assertInRange(
+    finalTempC,
+    ADIABATIC_TEMP_MIN_C,
+    ADIABATIC_TEMP_MAX_C,
+    "Final temperature (°C)",
+  );
   if (!(finalTempC > initialTempC)) {
     throw new Error("Final temperature must be greater than initial temperature.");
   }
@@ -64,15 +79,9 @@ export function adiabaticMinSection(
   input: AdiabaticMinSectionInput,
 ): AdiabaticMinSectionResult {
   const { currentA, durationS, k } = input;
-  if (!(currentA > 0)) {
-    throw new Error("Short-circuit current must be greater than zero.");
-  }
-  if (!(durationS > 0)) {
-    throw new Error("Fault duration must be greater than zero.");
-  }
-  if (!(k > 0)) {
-    throw new Error("k-factor must be greater than zero.");
-  }
+  assertPositive(currentA, "Short-circuit current");
+  assertPositive(durationS, "Fault duration");
+  assertPositive(k, "k-factor");
 
   const sectionMm2 = (currentA * Math.sqrt(durationS)) / k;
   return {

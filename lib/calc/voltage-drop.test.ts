@@ -64,4 +64,74 @@ describe("voltageDropIec", () => {
     expect(curve).toHaveLength(10);
     expect(curve[9]!.percentDrop).toBeGreaterThan(curve[0]!.percentDrop);
   });
+
+  it("rejects power factor outside 0–1", () => {
+    expect(() =>
+      voltageDropIec({
+        material: "copper",
+        circuit: "three-phase",
+        lengthM: 100,
+        currentA: 80,
+        sectionMm2: 25,
+        temperatureC: 70,
+        powerFactor: 1.2,
+        reactanceOhmPerKm: 0,
+        nominalVoltageV: 400,
+      }),
+    ).toThrow(/Power factor/);
+  });
+
+  it("rejects negative current, length, and reactance", () => {
+    const base = {
+      material: "copper" as const,
+      circuit: "three-phase" as const,
+      lengthM: 100,
+      currentA: 80,
+      sectionMm2: 25,
+      temperatureC: 70,
+      powerFactor: 0.85,
+      reactanceOhmPerKm: 0.08,
+      nominalVoltageV: 400,
+    };
+    expect(() => voltageDropIec({ ...base, currentA: -80 })).toThrow(/Current must be ≥ 0/);
+    expect(() => voltageDropIec({ ...base, lengthM: 0 })).toThrow(/Length must be greater than zero/);
+    expect(() => voltageDropIec({ ...base, reactanceOhmPerKm: -0.08 })).toThrow(
+      /Reactance must be ≥ 0/,
+    );
+  });
+
+  it("rejects conductor temperature outside −50 to 250 °C", () => {
+    const base = {
+      material: "copper" as const,
+      circuit: "three-phase" as const,
+      lengthM: 100,
+      currentA: 80,
+      sectionMm2: 25,
+      powerFactor: 0.85,
+      reactanceOhmPerKm: 0,
+      nominalVoltageV: 400,
+    };
+    expect(() => voltageDropIec({ ...base, temperatureC: -80 })).toThrow(
+      /Conductor temperature/,
+    );
+    expect(() => voltageDropIec({ ...base, temperatureC: 400 })).toThrow(
+      /Conductor temperature/,
+    );
+  });
+
+  it("rejects a non-positive cross-section", () => {
+    expect(() =>
+      voltageDropIec({
+        material: "copper",
+        circuit: "three-phase",
+        lengthM: 100,
+        currentA: 80,
+        sectionMm2: 0,
+        temperatureC: 70,
+        powerFactor: 0.85,
+        reactanceOhmPerKm: 0,
+        nominalVoltageV: 400,
+      }),
+    ).toThrow(/cross-section/);
+  });
 });

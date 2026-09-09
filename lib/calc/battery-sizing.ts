@@ -10,11 +10,27 @@
  * a 10-hour-equivalent Ah with those three factors only.
  */
 
+import {
+  assertInRange,
+  assertNonNegative,
+  assertNonNegativeInteger,
+  assertPositive,
+  assertPositiveInteger,
+} from "./assert";
+
 /** Common 10-hour (C10) Ah ratings used to suggest the next commercial size. */
 export const COMMON_AH_RATINGS = [
   10, 16, 24, 28, 30, 38, 40, 50, 65, 80, 100, 120, 150, 160, 180, 200, 250, 300,
   400, 500, 600, 800, 1000,
 ] as const;
+
+export const AGEING_FACTOR_MIN = 1;
+export const AGEING_FACTOR_MAX = 3;
+export const TEMPERATURE_FACTOR_MIN = 0.5;
+export const TEMPERATURE_FACTOR_MAX = 2.5;
+export const DESIGN_MARGIN_MIN = 1;
+export const DESIGN_MARGIN_MAX = 3;
+export const AUTONOMY_MAX_H = 720;
 
 export type StandingLoad = {
   name: string;
@@ -93,12 +109,6 @@ export function nextStandardAh(requiredAh: number): number | null {
   return match ?? null;
 }
 
-function assertNonNegative(value: number, label: string): void {
-  if (!(value >= 0) || !Number.isFinite(value)) {
-    throw new Error(`${label} must be ≥ 0.`);
-  }
-}
-
 /** Resolve a standing load entered as amps, watts, or both (amps win). */
 export function resolveStandingLoad(
   load: StandingLoad,
@@ -129,13 +139,19 @@ export function batterySizing(input: BatterySizingInput): BatterySizingResult {
     designMargin,
   } = input;
 
-  if (!(voltageV > 0)) throw new Error("DC voltage must be greater than zero.");
-  if (!(autonomyH > 0)) throw new Error("Autonomy must be greater than zero.");
-  if (!(ageingFactor > 0)) throw new Error("Ageing factor must be greater than zero.");
-  if (!(temperatureFactor > 0)) {
-    throw new Error("Temperature factor must be greater than zero.");
+  assertPositive(voltageV, "DC voltage");
+  assertPositive(autonomyH, "Autonomy");
+  if (autonomyH > AUTONOMY_MAX_H) {
+    throw new Error(`Autonomy must be ≤ ${AUTONOMY_MAX_H} h.`);
   }
-  if (!(designMargin > 0)) throw new Error("Design margin must be greater than zero.");
+  assertInRange(ageingFactor, AGEING_FACTOR_MIN, AGEING_FACTOR_MAX, "Ageing factor");
+  assertInRange(
+    temperatureFactor,
+    TEMPERATURE_FACTOR_MIN,
+    TEMPERATURE_FACTOR_MAX,
+    "Temperature factor",
+  );
+  assertInRange(designMargin, DESIGN_MARGIN_MIN, DESIGN_MARGIN_MAX, "Design margin");
   if (standingLoads.length === 0 && switchgear.length === 0) {
     throw new Error("Add at least one standing load or switchgear duty.");
   }
@@ -152,18 +168,16 @@ export function batterySizing(input: BatterySizingInput): BatterySizingResult {
 
   const switchgearResults: SwitchgearDutyResult[] = switchgear.map((duty, index) => {
     const label = duty.name.trim() || `Switchgear ${index + 1}`;
-    if (!(duty.quantity > 0) || !Number.isFinite(duty.quantity)) {
-      throw new Error(`${label} quantity must be greater than zero.`);
-    }
+    assertPositiveInteger(duty.quantity, `${label} quantity`);
     assertNonNegative(duty.tripCurrentA, `${label} trip current`);
     assertNonNegative(duty.tripDurationS, `${label} trip duration`);
-    assertNonNegative(duty.tripOperations, `${label} trip operations`);
+    assertNonNegativeInteger(duty.tripOperations, `${label} trip operations`);
     assertNonNegative(duty.closeCurrentA, `${label} close current`);
     assertNonNegative(duty.closeDurationS, `${label} close duration`);
-    assertNonNegative(duty.closeOperations, `${label} close operations`);
+    assertNonNegativeInteger(duty.closeOperations, `${label} close operations`);
     assertNonNegative(duty.motorCurrentA, `${label} motor current`);
     assertNonNegative(duty.motorDurationS, `${label} motor duration`);
-    assertNonNegative(duty.motorOperations, `${label} motor operations`);
+    assertNonNegativeInteger(duty.motorOperations, `${label} motor operations`);
 
     const ampereSeconds =
       duty.quantity *

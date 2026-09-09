@@ -1,3 +1,5 @@
+import { assertNonNegative, assertPositive, assertPowerFactor } from "./assert";
+
 const SQRT3 = Math.sqrt(3);
 
 export type ThreePhaseInput = {
@@ -23,12 +25,8 @@ export type ThreePhaseResult = {
 
 export function threePhasePower(input: ThreePhaseInput): ThreePhaseResult {
   const { lineVoltage, powerFactor } = input;
-  if (!(lineVoltage > 0)) {
-    throw new Error("Line-to-line voltage must be greater than zero.");
-  }
-  if (powerFactor < 0 || powerFactor > 1) {
-    throw new Error("Power factor must be between 0 and 1.");
-  }
+  assertPositive(lineVoltage, "Line-to-line voltage");
+  assertPowerFactor(powerFactor);
 
   const sinPhi = Math.sqrt(Math.max(0, 1 - powerFactor * powerFactor));
   const currentIn = input.current;
@@ -38,12 +36,11 @@ export function threePhasePower(input: ThreePhaseInput): ThreePhaseResult {
   let equation: string;
 
   if (currentIn !== null && currentIn !== undefined && Number.isFinite(currentIn)) {
-    if (currentIn < 0) {
-      throw new Error("Current must be ≥ 0.");
-    }
+    assertNonNegative(currentIn, "Current");
     current = currentIn;
     equation = "P = √3 · V_L · I_L · cosφ,  S = √3 · V_L · I_L,  Q = √3 · V_L · I_L · sinφ";
   } else if (powerIn !== null && powerIn !== undefined && Number.isFinite(powerIn)) {
+    assertNonNegative(powerIn, "Active power");
     if (powerFactor === 0) {
       throw new Error("Cannot solve current from power when power factor is 0.");
     }

@@ -50,6 +50,23 @@ describe("adiabaticKFactor", () => {
       }),
     ).toThrow(/Final temperature/);
   });
+
+  it("rejects conductor temperatures outside −50 to 400 °C", () => {
+    expect(() =>
+      adiabaticKFactor({
+        material: "copper",
+        initialTempC: -80,
+        finalTempC: 160,
+      }),
+    ).toThrow(/Initial temperature/);
+    expect(() =>
+      adiabaticKFactor({
+        material: "copper",
+        initialTempC: 90,
+        finalTempC: 500,
+      }),
+    ).toThrow(/Final temperature/);
+  });
 });
 
 describe("adiabaticMinSection", () => {
@@ -97,6 +114,9 @@ describe("adiabaticMinSection", () => {
   it("rejects non-positive current, time, or k", () => {
     expect(() =>
       adiabaticMinSection({ currentA: 0, durationS: 1, k: 115 }),
+    ).toThrow(/current/);
+    expect(() =>
+      adiabaticMinSection({ currentA: -1000, durationS: 1, k: 115 }),
     ).toThrow(/current/);
     expect(() =>
       adiabaticMinSection({ currentA: 1000, durationS: 0, k: 115 }),

@@ -1,3 +1,5 @@
+import { assertNonNegative, assertPositive } from "./assert";
+
 /**
  * IEC 60255-151 inverse-time (IDMT) and independent-time characteristics,
  * plus generic IEC 60269-style fuse melting curves for coordination overlays.
@@ -108,6 +110,9 @@ export function getFuseClass(id: FuseClassId): FuseClassDefinition {
 
 /** Minimum recommended grading margin between successive layers (s). */
 export const GRADING_MARGIN_S = 0.05;
+
+/** Practical upper bound for TMS (typical IEC relays are 0.025–1.5). */
+export const TMS_MAX = 10;
 
 export type RelayProtectionDevice = {
   kind: "relay";
@@ -312,6 +317,7 @@ export function idmtTimeS(
   }
   if (!(pickupA > 0)) throw new Error("I> pickup must be greater than zero.");
   if (!(tms > 0)) throw new Error("TMS must be greater than zero.");
+  if (tms > TMS_MAX) throw new Error(`TMS must be ≤ ${TMS_MAX}.`);
   if (!(currentA > pickupA)) {
     throw new Error("IDMT current must be greater than I>.");
   }
@@ -584,13 +590,25 @@ export function gradingMargins(
 }
 
 function validateRelay(device: RelayProtectionDevice): void {
-  if (!(device.pickupA > 0)) throw new Error("I> pickup must be greater than zero.");
-  if (device.characteristic !== "definite-time" && !(device.tms > 0)) {
-    throw new Error("TMS must be greater than zero.");
+  assertPositive(device.pickupA, "I> pickup");
+  if (device.characteristic !== "definite-time") {
+    assertPositive(device.tms, "TMS");
+    if (device.tms > TMS_MAX) throw new Error(`TMS must be ≤ ${TMS_MAX}.`);
+  } else {
+    assertNonNegative(device.definiteTimeS, "t>");
   }
   const instPickup = optionalPositive(device.instantaneousPickupA);
   if (instPickup !== null && instPickup <= device.pickupA) {
     throw new Error("I>> must be greater than I>.");
+  }
+  if (instPickup !== null) {
+    if (
+      device.instantaneousTimeS === null ||
+      device.instantaneousTimeS === undefined
+    ) {
+      throw new Error("t>> must be ≥ 0 when I>> is set.");
+    }
+    assertNonNegative(device.instantaneousTimeS, "t>>");
   }
 }
 

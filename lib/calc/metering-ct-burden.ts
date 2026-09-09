@@ -10,11 +10,15 @@
  * "Calculate Protection and Metering CTs v1.2" workbook (ref. BS EN 61869-2).
  */
 
-import { COPPER_RESISTIVITY_OHM_M } from "./protection-ct-alf";
+import { COPPER_RESISTIVITY_OHM_M, WIRING_CSA_MAX_MM2 } from "./protection-ct-alf";
+import { assertInRange, assertNonNegative, assertPositive } from "./assert";
 
 /** Fractions of rated burden that bound the class-guaranteed accuracy range. */
 export const MIN_BURDEN_FRACTION = 0.25;
 export const MAX_BURDEN_FRACTION = 1;
+
+export const VOLTAGE_DEVIATION_MIN_PU = 0.5;
+export const VOLTAGE_DEVIATION_MAX_PU = 1.5;
 
 export type MeteringCtInput = {
   /** Load capacity, VA (S). */
@@ -83,16 +87,24 @@ export function meteringCtBurden(input: MeteringCtInput): MeteringCtResult {
     ratedBurdenVa,
   } = input;
 
-  if (!(loadCapacityVa > 0)) throw new Error("Load capacity must be greater than zero.");
-  if (!(voltageV > 0)) throw new Error("Voltage must be greater than zero.");
-  if (!(voltageDeviationPu > 0)) throw new Error("Voltage deviation must be greater than zero.");
-  if (!(ctPrimaryA > 0)) throw new Error("CT primary must be greater than zero.");
-  if (!(ctSecondaryA > 0)) throw new Error("CT secondary must be greater than zero.");
-  if (!(wiringLengthM >= 0)) throw new Error("Wiring length must be ≥ 0.");
-  if (!(wiringCsaMm2 > 0)) throw new Error("Wiring cross-section must be greater than zero.");
-  if (!(meterResistanceOhm >= 0)) throw new Error("Meter resistance must be ≥ 0.");
-  if (!(extraResistanceOhm >= 0)) throw new Error("Extra resistance must be ≥ 0.");
-  if (!(ratedBurdenVa > 0)) throw new Error("Rated burden must be greater than zero.");
+  assertPositive(loadCapacityVa, "Load capacity");
+  assertPositive(voltageV, "Voltage");
+  assertInRange(
+    voltageDeviationPu,
+    VOLTAGE_DEVIATION_MIN_PU,
+    VOLTAGE_DEVIATION_MAX_PU,
+    "Voltage deviation (p.u.)",
+  );
+  assertPositive(ctPrimaryA, "CT primary");
+  assertPositive(ctSecondaryA, "CT secondary");
+  assertNonNegative(wiringLengthM, "Wiring length");
+  assertPositive(wiringCsaMm2, "Wiring cross-section");
+  if (wiringCsaMm2 > WIRING_CSA_MAX_MM2) {
+    throw new Error(`Wiring cross-section must be ≤ ${WIRING_CSA_MAX_MM2} mm².`);
+  }
+  assertNonNegative(meterResistanceOhm, "Meter resistance");
+  assertNonNegative(extraResistanceOhm, "Extra resistance");
+  assertPositive(ratedBurdenVa, "Rated burden");
 
   const loadCurrentA = loadCapacityVa / (Math.sqrt(3) * voltageV * voltageDeviationPu);
   const secondaryCurrentA = loadCurrentA / (ctPrimaryA / ctSecondaryA);

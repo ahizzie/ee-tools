@@ -39,4 +39,20 @@ describe("threePhaseAmpsKw", () => {
       }),
     ).toThrow(/not both/);
   });
+
+  it("rejects negative current, negative kW, and PF outside 0–1", () => {
+    expect(() =>
+      threePhaseAmpsKw({ lineVoltage: 400, current: -10, powerFactor: 0.8 }),
+    ).toThrow(/Current must be ≥ 0/);
+    expect(() =>
+      threePhaseAmpsKw({
+        lineVoltage: 400,
+        activePowerKw: -5,
+        powerFactor: 0.8,
+      }),
+    ).toThrow(/Active power must be ≥ 0/);
+    expect(() =>
+      threePhaseAmpsKw({ lineVoltage: 400, current: 10, powerFactor: 1.2 }),
+    ).toThrow(/Power factor/);
+  });
 });

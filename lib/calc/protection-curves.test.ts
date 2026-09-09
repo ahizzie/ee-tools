@@ -88,6 +88,24 @@ describe("operatingTimeS", () => {
   it("rejects current below I>", () => {
     expect(() => operatingTimeS(baseDevice(), 99)).toThrow(/below I>/);
   });
+
+  it("rejects non-positive pickup, TMS outside 0–10, and I>> ≤ I>", () => {
+    expect(() => operatingTimeS(baseDevice({ pickupA: 0 }), 100)).toThrow(/I> pickup/);
+    expect(() => operatingTimeS(baseDevice({ tms: 0 }), 200)).toThrow(/TMS must be greater than zero/);
+    expect(() => operatingTimeS(baseDevice({ tms: 11 }), 200)).toThrow(/TMS must be ≤ 10/);
+    expect(() =>
+      operatingTimeS(baseDevice({ instantaneousPickupA: 50, instantaneousTimeS: 0.05 }), 200),
+    ).toThrow(/I>> must be greater than I>/);
+  });
+
+  it("rejects a missing or negative t>> when I>> is set", () => {
+    expect(() =>
+      overlayCurves(
+        [baseDevice({ instantaneousPickupA: 800, instantaneousTimeS: -0.01 })],
+        4000,
+      ),
+    ).toThrow(/t>> must be ≥ 0/);
+  });
 });
 
 describe("generic fuse melting curves", () => {
@@ -103,6 +121,10 @@ describe("generic fuse melting curves", () => {
 
   it("rejects currents below the aM operating band", () => {
     expect(() => fuseMeltingTimeS("am", 100, 300)).toThrow(/operating range/);
+  });
+
+  it("rejects a non-positive fuse rating", () => {
+    expect(() => fuseMeltingTimeS("gg", 0, 500)).toThrow(/rated current must be greater than zero/);
   });
 
   it("makes aM slower than gG in the moderate overload region", () => {

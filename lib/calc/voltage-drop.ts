@@ -1,3 +1,5 @@
+import { assertInRange, assertNonNegative, assertPowerFactor } from "./assert";
+
 export type ConductorMaterial = "copper" | "aluminium";
 export type CircuitType = "single-phase" | "three-phase";
 
@@ -14,6 +16,10 @@ const ALPHA: Record<ConductorMaterial, number> = {
 
 /** Typical cable reactance if the user does not override (Ω/km). */
 export const DEFAULT_REACTANCE_OHM_PER_KM = 0.08;
+
+/** Conductor temperature window for the linear ρ(θ) model. */
+export const VOLTAGE_DROP_TEMP_MIN_C = -50;
+export const VOLTAGE_DROP_TEMP_MAX_C = 250;
 
 export type VoltageDropInput = {
   material: ConductorMaterial;
@@ -61,14 +67,19 @@ export function voltageDropIec(input: VoltageDropInput): VoltageDropResult {
   if (!(lengthM > 0)) throw new Error("Length must be greater than zero.");
   if (!(currentA >= 0)) throw new Error("Current must be ≥ 0.");
   if (!(sectionMm2 > 0)) throw new Error("Conductor cross-section must be greater than zero.");
-  if (powerFactor < 0 || powerFactor > 1) {
-    throw new Error("Power factor must be between 0 and 1.");
-  }
+  assertPowerFactor(powerFactor);
   if (!(nominalVoltageV > 0)) throw new Error("Nominal voltage must be greater than zero.");
+  assertInRange(
+    temperatureC,
+    VOLTAGE_DROP_TEMP_MIN_C,
+    VOLTAGE_DROP_TEMP_MAX_C,
+    "Conductor temperature (°C)",
+  );
 
   const resistivity = conductorResistivity(material, temperatureC);
   const rOhm = (resistivity * lengthM) / sectionMm2;
   const xPerKm = input.reactanceOhmPerKm ?? DEFAULT_REACTANCE_OHM_PER_KM;
+  assertNonNegative(xPerKm, "Reactance");
   const xOhm = (xPerKm * lengthM) / 1000;
   const sinPhi = Math.sqrt(Math.max(0, 1 - powerFactor * powerFactor));
   const zDrop = rOhm * powerFactor + xOhm * sinPhi;
