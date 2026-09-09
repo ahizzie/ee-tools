@@ -6,36 +6,22 @@ import {
   useContext,
   useMemo,
   useRef,
-  useState,
   type ReactNode,
 } from "react";
 import type { ToolSnapshot } from "@/lib/copy-results";
 
-export type RegisteredExample = {
-  id: string;
-  label: string;
-};
-
 type ToolSessionValue = {
   slug: string;
   name: string;
-  examples: RegisteredExample[];
   setSnapshot: (snapshot: ToolSnapshot) => void;
   getSnapshot: () => ToolSnapshot | null;
-  registerExamples: (examples: RegisteredExample[], apply: (id: string) => void) => void;
+  registerApplyExample: (apply: (id: string) => void) => void;
   applyExample: (id: string) => void;
   getShareHref: () => string;
   registerShareHref: (getter: () => string) => void;
 };
 
 const ToolSessionContext = createContext<ToolSessionValue | null>(null);
-
-function sameExamples(a: RegisteredExample[], b: RegisteredExample[]): boolean {
-  return (
-    a.length === b.length &&
-    a.every((item, index) => item.id === b[index]?.id && item.label === b[index]?.label)
-  );
-}
 
 export function ToolSessionProvider({
   slug,
@@ -46,7 +32,6 @@ export function ToolSessionProvider({
   name: string;
   children: ReactNode;
 }) {
-  const [examples, setExamples] = useState<RegisteredExample[]>([]);
   const snapshotRef = useRef<ToolSnapshot | null>(null);
   const applyRef = useRef<(id: string) => void>(() => undefined);
   const shareHrefRef = useRef<() => string>(() =>
@@ -59,13 +44,9 @@ export function ToolSessionProvider({
 
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const registerExamples = useCallback(
-    (next: RegisteredExample[], apply: (id: string) => void) => {
-      applyRef.current = apply;
-      setExamples((current) => (sameExamples(current, next) ? current : next));
-    },
-    [],
-  );
+  const registerApplyExample = useCallback((apply: (id: string) => void) => {
+    applyRef.current = apply;
+  }, []);
 
   const registerShareHref = useCallback((getter: () => string) => {
     shareHrefRef.current = getter;
@@ -81,10 +62,9 @@ export function ToolSessionProvider({
     () => ({
       slug,
       name,
-      examples,
       setSnapshot,
       getSnapshot,
-      registerExamples,
+      registerApplyExample,
       applyExample,
       getShareHref,
       registerShareHref,
@@ -92,10 +72,9 @@ export function ToolSessionProvider({
     [
       slug,
       name,
-      examples,
       setSnapshot,
       getSnapshot,
-      registerExamples,
+      registerApplyExample,
       applyExample,
       getShareHref,
       registerShareHref,

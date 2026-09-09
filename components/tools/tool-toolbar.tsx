@@ -7,6 +7,7 @@ import { PrintButton } from "@/components/layout/print-button";
 import { Button } from "@/components/ui/button";
 import { useToolSession } from "@/components/tools/tool-session";
 import { getToolAssumptions } from "@/config/tool-assumptions";
+import { getToolExamples } from "@/config/tool-share";
 import { formatCopyResults } from "@/lib/copy-results";
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -37,6 +38,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 export function ToolToolbar() {
   const session = useToolSession();
   const [busy, setBusy] = useState<"results" | "link" | null>(null);
+  const examples = getToolExamples(session.slug);
 
   async function copyResults() {
     const snapshot = session.getSnapshot();
@@ -69,7 +71,7 @@ export function ToolToolbar() {
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
-      {session.examples.map((example) => (
+      {examples.map((example) => (
         <Button
           key={example.id}
           type="button"
