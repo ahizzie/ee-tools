@@ -1,11 +1,4 @@
-import { Info } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ChevronDown, Info } from "lucide-react";
 import { getToolAssumptions } from "@/config/tool-assumptions";
 
 function AssumptionList({ title, items }: { title: string; items: readonly string[] }) {
@@ -27,18 +20,23 @@ export function AssumptionsPanel({ slug }: { slug: string }) {
   if (!assumptions) return null;
 
   return (
-    <Card className="print:break-inside-avoid" id="assumptions">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Info className="size-4" aria-hidden />
-          Assumptions & applicability
-        </CardTitle>
-        <CardDescription>
+    <details
+      className="group rounded-xl bg-card ring-1 ring-foreground/10 print:break-inside-avoid"
+      id="assumptions"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-4 py-4 text-sm font-medium outline-none [&::-webkit-details-marker]:hidden focus-visible:ring-3 focus-visible:ring-ring/50">
+        <Info className="size-4 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1">Assumptions & applicability</span>
+        <ChevronDown
+          className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <div className="grid gap-4 px-4 pb-4">
+        <p className="text-sm text-muted-foreground">
           What this calculator models, when not to use it, and the ranges it
           will reject.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
+        </p>
         <AssumptionList title="Assumes" items={assumptions.assumes} />
         <AssumptionList title="Do not use for" items={assumptions.notFor} />
         <AssumptionList title="Standards & clauses" items={assumptions.standards} />
@@ -47,7 +45,7 @@ export function AssumptionsPanel({ slug }: { slug: string }) {
           items={assumptions.conventions}
         />
         <AssumptionList title="Validation ranges" items={assumptions.ranges} />
-      </CardContent>
-    </Card>
+      </div>
+    </details>
   );
 }
