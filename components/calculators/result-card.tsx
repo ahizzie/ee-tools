@@ -34,13 +34,26 @@ export function ResultCard({
 type ResultRowProps = {
   label: string;
   value: string;
+  valueClassName?: string;
+  labelClassName?: string;
 };
 
-export function ResultRow({ label, value }: ResultRowProps) {
+export function ResultRow({
+  label,
+  value,
+  valueClassName,
+  labelClassName,
+}: ResultRowProps) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-border/60 py-1.5 last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono font-medium tabular-nums">{value}</span>
+      <span className={labelClassName ?? "text-muted-foreground"}>{label}</span>
+      <span
+        className={
+          valueClassName ?? "font-mono font-medium tabular-nums"
+        }
+      >
+        {value}
+      </span>
     </div>
   );
 }
