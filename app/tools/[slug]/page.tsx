@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AssumptionsPanel } from "@/components/tools/assumptions-panel";
 import { ToolSessionProvider } from "@/components/tools/tool-session";
@@ -50,7 +51,11 @@ export default async function ToolPage({ params }: ToolPageProps) {
           </div>
           <ToolToolbar />
         </div>
-        <ToolView slug={tool.slug} />
+        <Suspense
+          fallback={<p className="text-sm text-muted-foreground">Loading calculator…</p>}
+        >
+          <ToolView slug={tool.slug} />
+        </Suspense>
         <AssumptionsPanel slug={tool.slug} />
       </article>
     </ToolSessionProvider>

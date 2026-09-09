@@ -1,32 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { replaceSearch, type ShareCodec } from "@/lib/share-url";
-
-function readWindowSearch(): URLSearchParams {
-  if (typeof window === "undefined") return new URLSearchParams();
-  return new URLSearchParams(window.location.search);
-}
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useSearchParams } from "next/navigation";
+import { type ShareCodec } from "@/lib/share-url";
 
 /**
  * Hydrate calculator state from the query string, then keep the URL in sync
- * with `history.replaceState` (no Next.js navigation).
+ * with `history.replaceState` using a relative `?query` (Next.js App Router).
  */
 export function useShareableState<T>(defaults: T, codec: ShareCodec<T>): [T, Dispatch<SetStateAction<T>>] {
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
   const [state, setState] = useState<T>(defaults);
-  const [hydrated, setHydrated] = useState(false);
+  const skipSearch = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- hydrate from location.search before paint. */
-    setState(codec.decode(readWindowSearch()));
-    setHydrated(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [codec]);
+    if (skipSearch.current === search) {
+      skipSearch.current = null;
+      return;
+    }
+    setState(codec.decode(new URLSearchParams(search)));
+  }, [search, codec]);
 
   useEffect(() => {
-    if (!hydrated) return;
-    replaceSearch(codec.encode(state));
-  }, [state, hydrated, codec]);
+    const qs = codec.encode(state).toString();
+    if (qs === search) return;
+    skipSearch.current = qs;
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }, [state, codec, search]);
 
   const update = useCallback<Dispatch<SetStateAction<T>>>((action) => {
     setState(action);
