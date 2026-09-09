@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Menu, X, Zap } from "lucide-react";
 import { SiteNav } from "@/components/layout/site-nav";
@@ -9,7 +10,12 @@ import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
   const [navOpen, setNavOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const navId = useId();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!navOpen) return;
@@ -24,6 +30,27 @@ export function SiteHeader() {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [navOpen]);
+
+  const overlay =
+    mounted && navOpen
+      ? createPortal(
+          <div className="md:hidden print:hidden">
+            <button
+              type="button"
+              className="fixed inset-0 top-14 z-30 bg-foreground/40"
+              aria-label="Close tool list"
+              onClick={() => setNavOpen(false)}
+            />
+            <aside
+              id={navId}
+              className="fixed inset-y-0 left-0 top-14 z-30 w-[min(18rem,calc(100vw-2rem))] overflow-y-auto border-r bg-background p-4 shadow-lg"
+            >
+              <SiteNav onNavigate={() => setNavOpen(false)} />
+            </aside>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur print:hidden">
@@ -51,22 +78,7 @@ export function SiteHeader() {
           <ToolSearch />
         </div>
       </div>
-      {navOpen ? (
-        <div className="md:hidden">
-          <button
-            type="button"
-            className="fixed inset-0 top-14 z-40 bg-foreground/40"
-            aria-label="Close tool list"
-            onClick={() => setNavOpen(false)}
-          />
-          <aside
-            id={navId}
-            className="fixed inset-y-0 left-0 top-14 z-50 w-[min(18rem,calc(100vw-2rem))] overflow-y-auto border-r bg-background p-4 shadow-lg"
-          >
-            <SiteNav onNavigate={() => setNavOpen(false)} />
-          </aside>
-        </div>
-      ) : null}
+      {overlay}
     </header>
   );
 }
