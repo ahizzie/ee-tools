@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo } from "react";
 import { NumericInput } from "@/components/calculators/numeric-input";
 import { ResultCard, ResultRow } from "@/components/calculators/result-card";
+import { useToolChrome } from "@/components/tools/use-tool-chrome";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,7 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  protectionCtAlfCodec,
+  protectionCtAlfDefaults,
+  protectionCtAlfExamples,
+} from "@/config/tool-share";
 import { protectionCtAlf } from "@/lib/calc/protection-ct-alf";
+import type { ToolSnapshot } from "@/lib/copy-results";
+import { useShareableState } from "@/lib/use-shareable-state";
 import {
   currentUnits,
   formatNumber,
@@ -22,39 +30,31 @@ import {
 } from "@/lib/units";
 
 export function ProtectionCtAlfCalculator() {
-  const [ctp, setCtp] = useState("600");
-  const [ctpUnit, setCtpUnit] = useState("A");
-  const [cts, setCts] = useState("1");
-  const [alfo, setAlfo] = useState("20");
-  const [ifault, setIfault] = useState("31500");
-  const [ifaultUnit, setIfaultUnit] = useState("A");
-  const [burden, setBurden] = useState("15");
-  const [rct, setRct] = useState("3");
-  const [rctUnit, setRctUnit] = useState("Ω");
-  const [rr, setRr] = useState("0.1");
-  const [rrUnit, setRrUnit] = useState("Ω");
-  const [length, setLength] = useState("40");
-  const [lengthUnit, setLengthUnit] = useState("m");
-  const [csa, setCsa] = useState("2.5");
-  const [sf, setSf] = useState("2");
+  const [state, setState] = useShareableState(protectionCtAlfDefaults, protectionCtAlfCodec);
+  const setField = useCallback(
+    <K extends keyof typeof state>(key: K, value: (typeof state)[K]) => {
+      setState((current) => ({ ...current, [key]: value }));
+    },
+    [setState],
+  );
 
-  const ctpf = currentUnits.find((u) => u.value === ctpUnit)?.factor ?? 1;
-  const ifaultf = currentUnits.find((u) => u.value === ifaultUnit)?.factor ?? 1;
-  const rctf = resistanceUnits.find((u) => u.value === rctUnit)?.factor ?? 1;
-  const rrf = resistanceUnits.find((u) => u.value === rrUnit)?.factor ?? 1;
-  const lf = lengthUnits.find((u) => u.value === lengthUnit)?.factor ?? 1;
+  const ctpf = currentUnits.find((u) => u.value === state.ctPrimaryUnit)?.factor ?? 1;
+  const ifaultf = currentUnits.find((u) => u.value === state.faultUnit)?.factor ?? 1;
+  const rctf = resistanceUnits.find((u) => u.value === state.rctUnit)?.factor ?? 1;
+  const rrf = resistanceUnits.find((u) => u.value === state.relayRUnit)?.factor ?? 1;
+  const lf = lengthUnits.find((u) => u.value === state.lengthUnit)?.factor ?? 1;
 
   const values = {
-    ctPrimaryA: parseOptionalNumber(ctp),
-    ctSecondaryA: parseOptionalNumber(cts),
-    ratedAlf: parseOptionalNumber(alfo),
-    minFaultCurrentA: parseOptionalNumber(ifault),
-    ratedBurdenVa: parseOptionalNumber(burden),
-    ctResistanceOhm: parseOptionalNumber(rct),
-    relayResistanceOhm: parseOptionalNumber(rr),
-    wiringLengthM: parseOptionalNumber(length),
-    wiringCsaMm2: parseOptionalNumber(csa),
-    safetyFactor: parseOptionalNumber(sf),
+    ctPrimaryA: parseOptionalNumber(state.ctPrimary),
+    ctSecondaryA: parseOptionalNumber(state.ctSecondary),
+    ratedAlf: parseOptionalNumber(state.ratedAlf),
+    minFaultCurrentA: parseOptionalNumber(state.fault),
+    ratedBurdenVa: parseOptionalNumber(state.burden),
+    ctResistanceOhm: parseOptionalNumber(state.rct),
+    relayResistanceOhm: parseOptionalNumber(state.relayR),
+    wiringLengthM: parseOptionalNumber(state.length),
+    wiringCsaMm2: parseOptionalNumber(state.csa),
+    safetyFactor: parseOptionalNumber(state.safetyFactor),
   };
 
   const equationFallback =
@@ -83,21 +83,63 @@ export function ProtectionCtAlfCalculator() {
     }
   }
 
+  const snapshot = useMemo<ToolSnapshot>(() => {
+    const inputs = [
+      { label: "CT primary", value: `${state.ctPrimary} ${state.ctPrimaryUnit}` },
+      { label: "CT secondary", value: `${state.ctSecondary} A` },
+      { label: "Rated ALF (the 20 in 5P20)", value: state.ratedAlf },
+      { label: "Min 3-phase fault current", value: `${state.fault} ${state.faultUnit}` },
+      { label: "Rated burden", value: `${state.burden} VA` },
+      { label: "CT internal resistance", value: `${state.rct} ${state.rctUnit}` },
+      { label: "Relay / device burden", value: `${state.relayR} ${state.relayRUnit}` },
+      { label: "Wiring length (one-way)", value: `${state.length} ${state.lengthUnit}` },
+      { label: "CT wiring cross-section", value: `${state.csa} mm²` },
+      { label: "Safety factor", value: state.safetyFactor },
+    ];
+    if (!result) return { inputs, outputs: [], error: message ?? "Invalid input" };
+    return {
+      inputs,
+      outputs: [
+        {
+          label: "Adequacy",
+          value: result.adequate
+            ? "CT is adequate — effective ALF exceeds required ALF"
+            : "CT is not adequate",
+        },
+        { label: "Effective ALF (ALFs)", value: formatNumber(result.alfSeen, 2) },
+        { label: "Required ALF (ALFr)", value: formatNumber(result.alfRequired, 2) },
+        { label: "Margin (ALFs − ALFr)", value: formatNumber(result.margin, 2) },
+        {
+          label: "CT wiring resistance (Rw)",
+          value: `${formatNumber(result.wiringResistanceOhm, 4)} Ω`,
+        },
+      ],
+    };
+  }, [state, result, message]);
+
+  useToolChrome({
+    state,
+    codec: protectionCtAlfCodec,
+    examples: protectionCtAlfExamples,
+    snapshot,
+    applyExample: (example) => setState(example.state),
+  });
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <NumericInput
           id="pct-ctp"
           label="CT primary"
-          value={ctp}
-          onChange={setCtp}
-          unit={ctpUnit}
+          value={state.ctPrimary}
+          onChange={(value) => setField("ctPrimary", value)}
+          unit={state.ctPrimaryUnit}
           units={currentUnits}
-          onUnitChange={setCtpUnit}
+          onUnitChange={(unit) => setField("ctPrimaryUnit", unit)}
         />
         <div className="grid gap-1.5">
           <Label>CT secondary</Label>
-          <Select value={cts} onValueChange={(v) => v && setCts(String(v))}>
+          <Select value={state.ctSecondary} onValueChange={(v) => v && setField("ctSecondary", String(v))}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -110,64 +152,64 @@ export function ProtectionCtAlfCalculator() {
         <NumericInput
           id="pct-alfo"
           label="Rated ALF (the 20 in 5P20)"
-          value={alfo}
-          onChange={setAlfo}
+          value={state.ratedAlf}
+          onChange={(value) => setField("ratedAlf", value)}
         />
         <NumericInput
           id="pct-if"
           label="Min 3-phase fault current"
-          value={ifault}
-          onChange={setIfault}
-          unit={ifaultUnit}
+          value={state.fault}
+          onChange={(value) => setField("fault", value)}
+          unit={state.faultUnit}
           units={currentUnits}
-          onUnitChange={setIfaultUnit}
+          onUnitChange={(unit) => setField("faultUnit", unit)}
         />
         <NumericInput
           id="pct-s"
           label="Rated burden"
-          value={burden}
-          onChange={setBurden}
+          value={state.burden}
+          onChange={(value) => setField("burden", value)}
           unit="VA"
         />
         <NumericInput
           id="pct-rct"
           label="CT internal resistance"
-          value={rct}
-          onChange={setRct}
-          unit={rctUnit}
+          value={state.rct}
+          onChange={(value) => setField("rct", value)}
+          unit={state.rctUnit}
           units={resistanceUnits}
-          onUnitChange={setRctUnit}
+          onUnitChange={(unit) => setField("rctUnit", unit)}
         />
         <NumericInput
           id="pct-rr"
           label="Relay / device burden"
-          value={rr}
-          onChange={setRr}
-          unit={rrUnit}
+          value={state.relayR}
+          onChange={(value) => setField("relayR", value)}
+          unit={state.relayRUnit}
           units={resistanceUnits}
-          onUnitChange={setRrUnit}
+          onUnitChange={(unit) => setField("relayRUnit", unit)}
         />
         <NumericInput
           id="pct-l"
           label="Wiring length (one-way)"
-          value={length}
-          onChange={setLength}
-          unit={lengthUnit}
+          value={state.length}
+          onChange={(value) => setField("length", value)}
+          unit={state.lengthUnit}
           units={lengthUnits}
-          onUnitChange={setLengthUnit}
+          onUnitChange={(unit) => setField("lengthUnit", unit)}
         />
         <NumericInput
           id="pct-csa"
           label="CT wiring cross-section"
-          value={csa}
-          onChange={setCsa}
+          value={state.csa}
+          onChange={(value) => setField("csa", value)}
           unit="mm²"
         />
         <NumericInput
           id="pct-sf"
           label="Safety factor"
-          value={sf}
-          onChange={setSf}
+          value={state.safetyFactor}
+          onChange={(value) => setField("safetyFactor", value)}
         />
       </div>
       <div className="grid gap-4">

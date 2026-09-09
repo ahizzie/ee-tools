@@ -14,14 +14,17 @@ Notes:
 
 ## Deferred from later epics
 
-Tracked here so the backlog matches the product (not in the current assumptions / validation work):
+Tracked here so the backlog matches the product:
 
-- Shareable URLs for calculator state
-- Copy results / copy link
-- Worked-example presets (“load example”)
 - Home search filtering of tool cards
 - AS/NZS 3000 current-carrying capacity (CCC) tool
 - Protection-curve depth (CT ratio on the TCC, extra characteristics, manufacturer fuse files)
+
+## Shipped in the share / copy / examples work
+
+- Shareable URLs for calculator state (`docs/SHARE_URLS.md`)
+- Copy results / copy link (toolbar next to Print)
+- Worked-example presets (“load example”)
 
 ## Already live (do not re-add)
 

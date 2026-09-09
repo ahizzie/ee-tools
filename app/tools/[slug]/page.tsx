@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { PrintButton } from "@/components/layout/print-button";
 import { AssumptionsPanel } from "@/components/tools/assumptions-panel";
+import { ToolSessionProvider } from "@/components/tools/tool-session";
+import { ToolToolbar } from "@/components/tools/tool-toolbar";
 import { ToolView } from "@/components/tools/tool-view";
 import { getTool, tools } from "@/config/tools";
 
@@ -35,21 +37,27 @@ export default async function ToolPage({ params }: ToolPageProps) {
   if (!tool) notFound();
 
   return (
-    <article className="grid gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="grid gap-1">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {tool.category} · IEC / metric
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">{tool.name}</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            {tool.description}
-          </p>
+    <ToolSessionProvider slug={tool.slug} name={tool.name}>
+      <article className="grid gap-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="grid gap-1">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {tool.category} · IEC / metric
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">{tool.name}</h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              {tool.description}
+            </p>
+          </div>
+          <ToolToolbar />
         </div>
-        <PrintButton />
-      </div>
-      <ToolView slug={tool.slug} />
-      <AssumptionsPanel slug={tool.slug} />
-    </article>
+        <Suspense
+          fallback={<p className="text-sm text-muted-foreground">Loading calculator…</p>}
+        >
+          <ToolView slug={tool.slug} />
+        </Suspense>
+        <AssumptionsPanel slug={tool.slug} />
+      </article>
+    </ToolSessionProvider>
   );
 }
