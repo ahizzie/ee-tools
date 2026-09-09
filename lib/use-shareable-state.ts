@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { replaceSearch, type ShareCodec } from "@/lib/share-url";
 
 function readWindowSearch(): URLSearchParams {
@@ -16,8 +16,8 @@ export function useShareableState<T>(defaults: T, codec: ShareCodec<T>): [T, Dis
   const [state, setState] = useState<T>(defaults);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- hydrate from location.search; replaceState is not a React store. */
+  useLayoutEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- hydrate from location.search before paint. */
     setState(codec.decode(readWindowSearch()));
     setHydrated(true);
     /* eslint-enable react-hooks/set-state-in-effect */

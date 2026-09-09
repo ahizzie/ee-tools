@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { ToolExample } from "@/config/tool-share";
 import type { ShareCodec } from "@/lib/share-url";
 import { shareHref } from "@/lib/use-shareable-state";
@@ -16,14 +16,20 @@ export function useToolChrome<T>(options: {
 }) {
   const session = useOptionalToolSession();
   const { state, codec, examples, snapshot, applyExample } = options;
+  const applyRef = useRef(applyExample);
+  const requestToken = session?.exampleRequest?.token;
+  const requestId = session?.exampleRequest?.id;
 
   useLayoutEffect(() => {
+    applyRef.current = applyExample;
     if (!session) return;
     session.setSnapshot(snapshot);
     session.registerShareHref(() => shareHref(state, codec));
-    session.registerApplyExample((id) => {
-      const example = examples.find((item) => item.id === id);
-      if (example) applyExample(example);
-    });
-  }, [session, snapshot, state, codec, examples, applyExample]);
+  }, [session, snapshot, state, codec, applyExample]);
+
+  useEffect(() => {
+    if (!requestId || requestToken == null) return;
+    const example = examples.find((item) => item.id === requestId);
+    if (example) applyRef.current(example);
+  }, [requestToken, requestId, examples]);
 }

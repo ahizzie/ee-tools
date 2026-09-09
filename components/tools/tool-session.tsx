@@ -6,17 +6,23 @@ import {
   useContext,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import type { ToolSnapshot } from "@/lib/copy-results";
 
+export type ExampleRequest = {
+  id: string;
+  token: number;
+};
+
 type ToolSessionValue = {
   slug: string;
   name: string;
+  exampleRequest: ExampleRequest | null;
+  requestExample: (id: string) => void;
   setSnapshot: (snapshot: ToolSnapshot) => void;
   getSnapshot: () => ToolSnapshot | null;
-  registerApplyExample: (apply: (id: string) => void) => void;
-  applyExample: (id: string) => void;
   getShareHref: () => string;
   registerShareHref: (getter: () => string) => void;
 };
@@ -32,11 +38,12 @@ export function ToolSessionProvider({
   name: string;
   children: ReactNode;
 }) {
+  const [exampleRequest, setExampleRequest] = useState<ExampleRequest | null>(null);
   const snapshotRef = useRef<ToolSnapshot | null>(null);
-  const applyRef = useRef<(id: string) => void>(() => undefined);
   const shareHrefRef = useRef<() => string>(() =>
     typeof window === "undefined" ? "" : window.location.href,
   );
+  const tokenRef = useRef(0);
 
   const setSnapshot = useCallback((next: ToolSnapshot) => {
     snapshotRef.current = next;
@@ -44,16 +51,13 @@ export function ToolSessionProvider({
 
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const registerApplyExample = useCallback((apply: (id: string) => void) => {
-    applyRef.current = apply;
-  }, []);
-
   const registerShareHref = useCallback((getter: () => string) => {
     shareHrefRef.current = getter;
   }, []);
 
-  const applyExample = useCallback((id: string) => {
-    applyRef.current(id);
+  const requestExample = useCallback((id: string) => {
+    tokenRef.current += 1;
+    setExampleRequest({ id, token: tokenRef.current });
   }, []);
 
   const getShareHref = useCallback(() => shareHrefRef.current(), []);
@@ -62,20 +66,20 @@ export function ToolSessionProvider({
     () => ({
       slug,
       name,
+      exampleRequest,
+      requestExample,
       setSnapshot,
       getSnapshot,
-      registerApplyExample,
-      applyExample,
       getShareHref,
       registerShareHref,
     }),
     [
       slug,
       name,
+      exampleRequest,
+      requestExample,
       setSnapshot,
       getSnapshot,
-      registerApplyExample,
-      applyExample,
       getShareHref,
       registerShareHref,
     ],

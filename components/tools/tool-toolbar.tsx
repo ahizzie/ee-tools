@@ -77,7 +77,7 @@ export function ToolToolbar() {
           type="button"
           variant="outline"
           title={`Load example: ${example.label}`}
-          onClick={() => session.applyExample(example.id)}
+          onClick={() => session.requestExample(example.id)}
         >
           {example.label}
         </Button>

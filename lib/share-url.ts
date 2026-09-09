@@ -185,7 +185,8 @@ export function replaceSearch(params: URLSearchParams): void {
   const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
   if (next === current) return;
-  window.history.replaceState(window.history.state, "", next);
+  // Next.js patches history.replaceState; pass null like the App Router docs.
+  window.history.replaceState(null, "", next);
 }
 
 export function hrefWithParams(params: URLSearchParams, base = typeof window === "undefined" ? "" : window.location.href): string {
