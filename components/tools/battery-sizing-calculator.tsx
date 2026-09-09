@@ -388,7 +388,7 @@ export function BatterySizingCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <p className="text-sm text-muted-foreground">
           Size a DC tripping battery from standing loads (amps or watts — the
@@ -466,7 +466,7 @@ export function BatterySizingCalculator() {
               onChange={(event) => updateLoad(load.id, { name: event.target.value })}
               aria-label={`Standing load ${index + 1} name`}
             />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3">
               <NumericInput
                 id={`${load.id}-p`}
                 label="Power"
@@ -545,7 +545,7 @@ export function BatterySizingCalculator() {
               value={item.quantity}
               onChange={(value) => updateSwitchgear(item.id, { quantity: value })}
             />
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               <NumericInput
                 id={`${item.id}-trip-i`}
                 label="Trip current"
@@ -577,7 +577,7 @@ export function BatterySizingCalculator() {
                 }
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               <NumericInput
                 id={`${item.id}-close-i`}
                 label="Close current"
@@ -609,7 +609,7 @@ export function BatterySizingCalculator() {
                 }
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               <NumericInput
                 id={`${item.id}-motor-i`}
                 label="Motor current"

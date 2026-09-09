@@ -39,8 +39,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
   return (
     <ToolSessionProvider slug={tool.slug} name={tool.name}>
       <article className="grid gap-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="grid gap-1">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+          <div className="grid min-w-0 gap-1">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {tool.category} · IEC / metric
             </p>

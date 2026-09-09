@@ -22,7 +22,7 @@ export function ResultCard({
     <Card className="print:ring-0">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription className="font-mono text-xs leading-relaxed">
+        <CardDescription className="font-mono text-xs leading-relaxed break-words">
           {equation}
         </CardDescription>
       </CardHeader>
@@ -45,12 +45,12 @@ export function ResultRow({
   labelClassName,
 }: ResultRowProps) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-border/60 py-1.5 last:border-0">
-      <span className={labelClassName ?? "text-muted-foreground"}>{label}</span>
+    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border/60 py-1.5 last:border-0">
+      <span className={`min-w-0 break-words ${labelClassName ?? "text-muted-foreground"}`}>
+        {label}
+      </span>
       <span
-        className={
-          valueClassName ?? "font-mono font-medium tabular-nums"
-        }
+        className={`min-w-0 break-words text-right ${valueClassName ?? "font-mono font-medium tabular-nums"}`}
       >
         {value}
       </span>

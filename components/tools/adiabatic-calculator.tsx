@@ -162,7 +162,7 @@ export function AdiabaticCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <p className="text-sm text-muted-foreground">
           IEC 60364-4-43 / IEC 60949 adiabatic heating: minimum conductor CSA
