@@ -14,28 +14,27 @@ export type ToolAssumptions = {
 };
 
 export const toolAssumptions = {
-  "ohms-law": {
+  "amps-kw": {
     assumes: [
-      "DC (or RMS-equivalent) Ohm’s law and Joule heating: V = I × R and P = V × I = I²R = V²/R.",
-      "A linear passive resistance. Enter any two of V, I, and R, or power plus one of V, I, or R.",
-      "All quantities are unsigned magnitudes. Negative values are rejected (no advanced signed-power mode).",
+      "Balanced three-phase sinusoidal quantities with a displacement power factor (cos φ).",
+      "Line-to-line voltage. Amps → kW uses P(kW) = √3 · V_L · I_L · cosφ / 1000; kW → amps inverts that. The same engine as the 3-phase power tool, without Q or S.",
+      "Enter either line current or active power in kW — not both.",
     ],
     notFor: [
-      "AC circuits with reactance or impedance (use 3-phase power or AC voltage drop).",
-      "Three-phase line quantities, unbalanced networks, or temperature-dependent resistance.",
-      "Bidirectional / regenerative power flow, or treating a negative result as direction.",
+      "Unbalanced systems, harmonics, true (wattmeter) PF, single-phase, or motor starting / inrush.",
+      "Reactive or apparent power (use 3-Phase Power & Current). DC Ohm’s law (removed; /tools/ohms-law redirects here).",
     ],
     standards: [
-      "Basic circuit theory only — no IEC product standard is applied.",
+      "IEC-style line-to-line formulation; 400 V is a typical IEC 60038 LV default, not a voltage-band check.",
     ],
     conventions: [
-      "Voltage, current, resistance, and power are magnitudes ≥ 0. Resistance must be > 0.",
-      "Displayed values use the selected SI prefix; the solver works in V, A, Ω, and W.",
-      "Results are rounded for display (up to four decimal places, en-GB grouping, or scientific notation for |x| ≥ 10⁶ or |x| < 10⁻³). Internal arithmetic is IEEE-754 double.",
+      "Power factor is a displacement factor in 0–1, not a percentage and not signed.",
+      "Active power is reported in kW. Current uses the selected SI prefix; voltage is converted to volts internally.",
+      "Display rounding matches the other tools (up to four decimal places or scientific notation).",
     ],
     ranges: [
-      "Voltage ≥ 0, current ≥ 0, power ≥ 0, resistance > 0.",
-      "Current must be non-zero when solving R from V and I; voltage must be non-zero when solving from P and V.",
+      "Line-to-line voltage > 0, line current ≥ 0, active power ≥ 0.",
+      "Power factor must be between 0 and 1. Current cannot be solved from power when PF = 0.",
     ],
   },
   "three-phase": {
@@ -84,6 +83,29 @@ export const toolAssumptions = {
     ranges: [
       "Length > 0, load current ≥ 0, cross-section > 0, nominal voltage > 0, reactance ≥ 0.",
       "Power factor 0–1. Conductor temperature between −50 °C and 250 °C.",
+    ],
+  },
+  adiabatic: {
+    assumes: [
+      "IEC 60364-4-43 / IEC 60949 adiabatic heating: S = I · √t / k, with k = k₀ · √ln((θ_f + β) / (θ_i + β)).",
+      "Material constants: copper k₀ = 226, β = 234.5; aluminium k₀ = 148, β = 228. Presets PVC 70 → 160 °C and XLPE/EPR 90 → 250 °C, or a user-entered k.",
+      "Heating is treated as adiabatic. Durations over 5 s are flagged; the formula is still evaluated without a non-adiabatic correction.",
+    ],
+    notFor: [
+      "Current-carrying capacity / CCC (not AS/NZS 3000 or IEC 60364 rating tables).",
+      "Screens, armour, sheaths, or non-adiabatic heating (IEC 60949 method B). Replacing a manufacturer let-through / I²t study.",
+    ],
+    standards: [
+      "IEC 60364-4-43 (adiabatic duration typically ≤ 5 s; PVC and XLPE short-circuit temperature limits).",
+      "IEC 60949 Annex A k-factor constants for copper and aluminium conductors.",
+    ],
+    conventions: [
+      "Current is RMS short-circuit current. Duration is converted to seconds. S is a calculated minimum CSA, not a standard cable size.",
+      "Final temperature must exceed initial. Display rounding matches the other tools.",
+    ],
+    ranges: [
+      "Short-circuit current > 0, fault duration > 0, k-factor > 0.",
+      "Initial and final conductor temperatures between −50 °C and 400 °C, with θ_f > θ_i.",
     ],
   },
   "protection-curves": {

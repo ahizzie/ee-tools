@@ -22,11 +22,11 @@ export const metadata: Metadata = {
     template: "%s | EE Tools",
   },
   description:
-    "Free IEC / metric electrical engineering calculators: Ohm's law, three-phase power, and AC voltage drop. Built to add more tools easily.",
+    "Free IEC / metric electrical engineering calculators: three-phase amps and kW, voltage drop, adiabatic short-circuit CSA, and protection tools.",
   openGraph: {
     title: "EE Tools — IEC electrical calculators",
     description:
-      "Ohm's law, three-phase power, and simplified IEC voltage drop calculators.",
+      "Three-phase amps ↔ kW, voltage drop, adiabatic short-circuit CSA, and protection calculators.",
     type: "website",
   },
 };

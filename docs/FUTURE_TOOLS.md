@@ -8,13 +8,9 @@ Simple table lookup of current-carrying capacity from AS/NZS 3000 rating tables,
 
 Notes:
 
-- Distinct from the IEC voltage-drop calculator (resistivity + optional reactance only).
+- Distinct from the IEC voltage-drop calculator (resistivity + optional reactance only) and from the adiabatic short-circuit CSA tool.
 - Source tables must be cited; do not invent ampacity values.
 - Same family as the deferred AS/NZS CCC tool below — implement once, with cited tables.
-
-## Other remaining ideas
-
-- Power ↔ current conversion (amps ↔ kW from voltage and PF). Overlaps the 3-phase tool; keep a dedicated converter only if the UX is faster for that job.
 
 ## Deferred from later epics
 
@@ -29,9 +25,10 @@ Tracked here so the backlog matches the product (not in the current assumptions 
 
 ## Already live (do not re-add)
 
-- Ohm’s law & power — `ohms-law`
+- 3-phase amps ↔ kW — `amps-kw` (replaces Ohm’s law; `/tools/ohms-law` redirects here). Still overlaps the fuller 3-phase power tool.
 - 3-phase power & current — `three-phase`
 - AC voltage drop (simplified IEC resistivity + optional reactance) — `voltage-drop`
+- Adiabatic short-circuit CSA — `adiabatic`
 - IDMT protection curves (IEC 60255-151, optional generic fuse overlays) — `protection-curves`
 - Protection CT ALF — `protection-ct-alf`
 - Metering CT burden — `metering-ct-burden`

@@ -1,17 +1,19 @@
 "use client";
 
+import { AdiabaticCalculator } from "@/components/tools/adiabatic-calculator";
+import { AmpsKwCalculator } from "@/components/tools/amps-kw-calculator";
 import { BatterySizingCalculator } from "@/components/tools/battery-sizing-calculator";
 import { MeteringCtBurdenCalculator } from "@/components/tools/metering-ct-burden-calculator";
-import { OhmsLawCalculator } from "@/components/tools/ohms-law-calculator";
 import { ProtectionCtAlfCalculator } from "@/components/tools/protection-ct-alf-calculator";
 import { ProtectionCurvesCalculator } from "@/components/tools/protection-curves-calculator";
 import { ThreePhaseCalculator } from "@/components/tools/three-phase-calculator";
 import { VoltageDropCalculator } from "@/components/tools/voltage-drop-calculator";
 
 const calculators = {
-  "ohms-law": OhmsLawCalculator,
+  "amps-kw": AmpsKwCalculator,
   "three-phase": ThreePhaseCalculator,
   "voltage-drop": VoltageDropCalculator,
+  adiabatic: AdiabaticCalculator,
   "protection-curves": ProtectionCurvesCalculator,
   "protection-ct-alf": ProtectionCtAlfCalculator,
   "metering-ct-burden": MeteringCtBurdenCalculator,
