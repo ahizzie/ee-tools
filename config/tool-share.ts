@@ -189,6 +189,63 @@ export const voltageDropCodec: ShareCodec<VoltageDropState> = createFlatCodec({
   },
 });
 
+export type CableCccState = {
+  material: string;
+  insulation: string;
+  arrangement: string;
+  installation: string;
+  section: string;
+};
+
+export const cableCccDefaults: CableCccState = {
+  material: "copper",
+  insulation: "X-90",
+  arrangement: "multicore",
+  installation: "unenclosed-air",
+  section: "16",
+};
+
+export const cableCccCodec: ShareCodec<CableCccState> = createFlatCodec({
+  defaults: cableCccDefaults,
+  keys: {
+    material: "mat",
+    insulation: "ins",
+    arrangement: "arr",
+    installation: "inst",
+    section: "a",
+  },
+  enums: {
+    material: ["copper", "aluminium"],
+    insulation: ["V-75", "V-90", "X-90"],
+    arrangement: ["multicore", "single-core"],
+    installation: [
+      "unenclosed-air",
+      "enclosed-air",
+      "buried-direct",
+      "underground-enclosure",
+    ],
+  },
+});
+
+export const cableCccExamples: ToolExample<CableCccState>[] = [
+  {
+    id: "cu-x90-16",
+    label: "Cu X-90 · 16 mm² unenclosed",
+    state: { ...cableCccDefaults },
+  },
+  {
+    id: "al-v90-70-enclosed",
+    label: "Al V-90 · 70 mm² enclosed",
+    state: {
+      material: "aluminium",
+      insulation: "V-90",
+      arrangement: "multicore",
+      installation: "enclosed-air",
+      section: "70",
+    },
+  },
+];
+
 export const voltageDropExamples: ToolExample<VoltageDropState>[] = [
   {
     id: "cu-3ph-20c",
@@ -867,6 +924,7 @@ export const toolShare = {
   "amps-kw": { codec: ampsKwCodec, examples: ampsKwExamples },
   "three-phase": { codec: threePhaseCodec, examples: threePhaseExamples },
   "voltage-drop": { codec: voltageDropCodec, examples: voltageDropExamples },
+  "cable-ccc-asnzs": { codec: cableCccCodec, examples: cableCccExamples },
   adiabatic: { codec: adiabaticCodec, examples: adiabaticExamples },
   "protection-curves": { codec: protectionCurvesCodec, examples: protectionCurvesExamples },
   "protection-ct-alf": { codec: protectionCtAlfCodec, examples: protectionCtAlfExamples },

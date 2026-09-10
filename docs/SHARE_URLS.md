@@ -37,6 +37,14 @@ Values are the same strings the form shows (including SI prefixes). Lists use `{
 
 `/tools/voltage-drop?mat=copper&cir=three-phase&l=100&lu=m&i=100&iu=A&a=25&t=20&pf=1&x=0&vn=400&vu=V`
 
+### `cable-ccc-asnzs`
+
+`mat` (`copper` \| `aluminium`) · `ins` (`V-75` \| `V-90` \| `X-90`) · `arr` (`multicore` \| `single-core`) · `inst` (`unenclosed-air` \| `enclosed-air` \| `buried-direct` \| `underground-enclosure`) · `a` (mm²)
+
+Shipped paths are copper/aluminium, V-90/X-90, multicore, unenclosed or enclosed in air. Other enum values are accepted in the URL and fail closed until a licensed table path is loaded.
+
+`/tools/cable-ccc-asnzs?mat=copper&ins=X-90&arr=multicore&inst=unenclosed-air&a=16`
+
 ### `adiabatic`
 
 `mat` `ins` (`pvc` \| `xlpe` \| `custom-k`) · `ti` `tf` `k` `i` `iu` `t` `tu`

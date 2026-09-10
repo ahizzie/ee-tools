@@ -1,0 +1,8 @@
+{
+  "standard": "AS/NZS 3008.1.1",
+  "edition": "2017",
+  "title": "Correction / derating factors (ambient, grouping, soil, depth)",
+  "sourceNote": "Empty on purpose. Ambient, grouping, soil-resistivity, and burial-depth correction-factor tables were not loaded: no legally republishable multi-row source was available, and blog ‘representative’ factors must not be treated as the standard. Leave this file empty, or populate from a licensed copy with tableId and columnId on every factor.",
+  "copyrightNote": "Verify against the current licensed standard. Do not invent correction factors.",
+  "factors": []
+}

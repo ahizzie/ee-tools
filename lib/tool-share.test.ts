@@ -7,6 +7,8 @@ import {
   ampsKwExamples,
   batterySizingCodec,
   batterySizingExamples,
+  cableCccCodec,
+  cableCccExamples,
   getToolExamples,
   meteringCtBurdenCodec,
   meteringCtBurdenExamples,
@@ -21,6 +23,7 @@ import {
   voltageDropExamples,
 } from "@/config/tool-share";
 import { adiabaticKFactor, adiabaticMinSection } from "@/lib/calc/adiabatic";
+import { lookupCableCcc, shippedCableCccDataset } from "@/lib/calc/asnzs-cable-ccc";
 import { threePhaseAmpsKw } from "@/lib/calc/amps-kw";
 import { batterySizing } from "@/lib/calc/battery-sizing";
 import { meteringCtBurden } from "@/lib/calc/metering-ct-burden";
@@ -55,6 +58,9 @@ describe("toolShare registry", () => {
       expect(voltageDropCodec.decode(voltageDropCodec.encode(example.state))).toEqual(
         example.state,
       );
+    }
+    for (const example of cableCccExamples) {
+      expect(cableCccCodec.decode(cableCccCodec.encode(example.state))).toEqual(example.state);
     }
     for (const example of adiabaticExamples) {
       expect(adiabaticCodec.decode(adiabaticCodec.encode(example.state))).toEqual(example.state);
@@ -119,6 +125,23 @@ describe("worked examples match textbook / Vitest cases", () => {
     });
     const expected = Math.sqrt(3) * 100 * ((0.017241 * 100) / 25);
     expect(result.voltageDropV).toBeCloseTo(expected, 8);
+  });
+
+  it("cable-ccc examples fail closed against the empty shipped table", () => {
+    for (const example of cableCccExamples) {
+      expect(() =>
+        lookupCableCcc(
+          {
+            material: example.state.material as "copper" | "aluminium",
+            insulation: example.state.insulation as "V-90" | "X-90",
+            arrangement: example.state.arrangement as "multicore",
+            installation: example.state.installation as "unenclosed-air" | "enclosed-air",
+            sizeMm2: Number(example.state.section),
+          },
+          shippedCableCccDataset,
+        ),
+      ).toThrow(/No licensed CCC ratings/);
+    }
   });
 
   it("adiabatic copper PVC 10 kA, 1 s", () => {
