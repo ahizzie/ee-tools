@@ -7,12 +7,14 @@ import { MeteringCtBurdenCalculator } from "@/components/tools/metering-ct-burde
 import { ProtectionCtAlfCalculator } from "@/components/tools/protection-ct-alf-calculator";
 import { ProtectionCurvesCalculator } from "@/components/tools/protection-curves-calculator";
 import { ThreePhaseCalculator } from "@/components/tools/three-phase-calculator";
+import { CableCccAsnzsCalculator } from "@/components/tools/cable-ccc-asnzs-calculator";
 import { VoltageDropCalculator } from "@/components/tools/voltage-drop-calculator";
 
 const calculators = {
   "amps-kw": AmpsKwCalculator,
   "three-phase": ThreePhaseCalculator,
   "voltage-drop": VoltageDropCalculator,
+  "cable-ccc-asnzs": CableCccAsnzsCalculator,
   adiabatic: AdiabaticCalculator,
   "protection-curves": ProtectionCurvesCalculator,
   "protection-ct-alf": ProtectionCtAlfCalculator,

@@ -1,0 +1,106 @@
+{
+  "standard": "AS/NZS 3008.1.1",
+  "edition": "2017",
+  "title": "Electrical installations — Selection of cables, Part 1.1: Cables for alternating voltages up to and including 0.6/1 kV — Typical Australian installation conditions",
+  "sourceNote": "Ratings array is empty on purpose. AS/NZS 3008 current-carrying-capacity tables are copyright Standards Australia / Standards New Zealand and were not found as a free, legally republishable dataset. Populate ratings only from a licensed copy of the named edition (or a manufacturer datasheet that quotes a specific table and column). Do not scrape unauthorized PDFs or reconstruct tables from blog approximations.",
+  "copyrightNote": "Verify every loaded value against the current licensed standard before relying on a result. This file is a schema and lookup path list, not a substitute for AS/NZS 3008.",
+  "referenceConditionsNote": "Copy the table’s own reference conditions from the licensed edition when you add ratings (AS/NZS 3008.1.1 air tables are commonly 40 °C ambient — confirm in the edition you load). AS/NZS 3008.1.2 covers typical New Zealand conditions and is not loaded here.",
+  "paths": [
+    {
+      "id": "cu-v90-mc-unenclosed-air",
+      "label": "Copper V-90 multicore, unenclosed in air",
+      "material": "copper",
+      "insulation": "V-90",
+      "arrangement": "multicore",
+      "installation": "unenclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "cu-v90-mc-enclosed-air",
+      "label": "Copper V-90 multicore, enclosed in air",
+      "material": "copper",
+      "insulation": "V-90",
+      "arrangement": "multicore",
+      "installation": "enclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "cu-x90-mc-unenclosed-air",
+      "label": "Copper X-90 multicore, unenclosed in air",
+      "material": "copper",
+      "insulation": "X-90",
+      "arrangement": "multicore",
+      "installation": "unenclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "cu-x90-mc-enclosed-air",
+      "label": "Copper X-90 multicore, enclosed in air",
+      "material": "copper",
+      "insulation": "X-90",
+      "arrangement": "multicore",
+      "installation": "enclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "al-v90-mc-unenclosed-air",
+      "label": "Aluminium V-90 multicore, unenclosed in air",
+      "material": "aluminium",
+      "insulation": "V-90",
+      "arrangement": "multicore",
+      "installation": "unenclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "al-v90-mc-enclosed-air",
+      "label": "Aluminium V-90 multicore, enclosed in air",
+      "material": "aluminium",
+      "insulation": "V-90",
+      "arrangement": "multicore",
+      "installation": "enclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "al-x90-mc-unenclosed-air",
+      "label": "Aluminium X-90 multicore, unenclosed in air",
+      "material": "aluminium",
+      "insulation": "X-90",
+      "arrangement": "multicore",
+      "installation": "unenclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    },
+    {
+      "id": "al-x90-mc-enclosed-air",
+      "label": "Aluminium X-90 multicore, enclosed in air",
+      "material": "aluminium",
+      "insulation": "X-90",
+      "arrangement": "multicore",
+      "installation": "enclosed-air",
+      "tableId": "",
+      "columnId": "",
+      "conditions": "",
+      "ratings": []
+    }
+  ]
+}

@@ -68,7 +68,7 @@ export const toolAssumptions = {
       "Optional series reactance of one conductor (default 0.08 Ω/km). Set X = 0 to ignore reactance. Constant RMS load current.",
     ],
     notFor: [
-      "Current-carrying capacity / ampacity. This is not an AS/NZS 3000 or IEC 60364 rating-table lookup.",
+      "Current-carrying capacity / ampacity. Use Cable CCC (AS/NZS 3008) for a tabulated I_z lookup; this is not an AS/NZS 3000 or IEC 60364 rating-table tool.",
       "Motor starting voltage dip, harmonics, unbalance, parallel cables, armour, or installation-method factors.",
       "DC circuits, or treating the result as a code-compliance voltage-drop limit.",
     ],
@@ -85,6 +85,34 @@ export const toolAssumptions = {
       "Power factor 0–1. Conductor temperature between −50 °C and 250 °C.",
     ],
   },
+  "cable-ccc-asnzs": {
+    assumes: [
+      "Exact-match table lookup of base tabulated current-carrying capacity I_z from the loaded AS/NZS 3008.1.1 dataset. No interpolation between sizes and no invented ampacity.",
+      "AS/NZS 3000 (Wiring Rules) is the installation / selection obligation; the CCC tables and selection methodology live in AS/NZS 3008. This MVP targets Part 1.1 typical Australian conditions, edition 2017, until licensed 2025 or 3008.1.2 tables are loaded.",
+      "Shipped data files contain lookup paths (Cu/Al, V-90/X-90, multicore, unenclosed or enclosed in air) with empty ratings. A result is returned only when a licensed cell with tableId and columnId is present.",
+      "Correction / derating factors (ambient, grouping, soil, burial depth) are not applied. I_z is the base tabulated value for the selected path, or the lookup fails closed.",
+    ],
+    notFor: [
+      "Treating an empty-table error as a rating, or using blog / calculator websites as a substitute for the licensed standard.",
+      "AS/NZS 3008.1.2 New Zealand-condition tables, the 2025 edition’s renumbered tables, single-core, buried, or V-75 paths until those datasets are loaded with citations.",
+      "Voltage drop, earth-fault loop impedance, short-circuit CSA, protective-device rating, or maximum-demand calculations.",
+      "NEC/AWG or IEC 60364-5-52 ampacity tables, or manufacturer fuse libraries.",
+    ],
+    standards: [
+      "AS/NZS 3000:2018 Electrical installations (Wiring Rules): conductors must be selected with adequate current-carrying capacity; the Wiring Rules refer to AS/NZS 3008 for tabulated CCC rather than owning the main rating tables.",
+      "AS/NZS 3008.1.1:2017 (intended loaded edition for this file): tabulated CCC and correction factors. AS/NZS 3008.1.1:2025 is the current Part 1.1 edition (published 19 December 2025); table identifiers may differ — set the dataset edition to the copy you load.",
+      "AS/NZS 3008.1.2:2017 covers typical New Zealand installation conditions and is not loaded in this MVP.",
+    ],
+    conventions: [
+      "Insulation labels V-90 and X-90 are AS/NZS 3008 family names (PVC 90 °C and XLPE 90 °C). Arrangement is multicore only in the shipped path list.",
+      "Display current in amperes with the same rounding as the other tools. Citation always includes standard, edition, table, and column when a rating exists.",
+      "Share URLs use mat, ins, arr, inst, and a (mm²). Unknown enum values fall back to the tool default.",
+    ],
+    ranges: [
+      "Conductor size must be a finite number greater than zero (mm²). The size must match a loaded table row exactly.",
+      "Material, insulation, arrangement, and installation must match a registered path. Missing paths, empty rating arrays, and uncited numbers are rejected.",
+    ],
+  },
   adiabatic: {
     assumes: [
       "IEC 60364-4-43 / IEC 60949 adiabatic heating: S = I · √t / k, with k = k₀ · √ln((θ_f + β) / (θ_i + β)).",
@@ -92,7 +120,7 @@ export const toolAssumptions = {
       "Heating is treated as adiabatic. Durations over 5 s are flagged; the formula is still evaluated without a non-adiabatic correction.",
     ],
     notFor: [
-      "Current-carrying capacity / CCC (not AS/NZS 3000 or IEC 60364 rating tables).",
+      "Current-carrying capacity / CCC (use Cable CCC (AS/NZS 3008) for tabulated I_z; this is not an AS/NZS 3000 or IEC 60364 rating table).",
       "Screens, armour, sheaths, or non-adiabatic heating (IEC 60949 method B). Replacing a manufacturer let-through / I²t study.",
     ],
     standards: [

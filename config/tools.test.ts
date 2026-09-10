@@ -12,8 +12,10 @@ describe("searchTools", () => {
     expect(searchTools("VOLTAGE-DROP").map((tool) => tool.slug)).toEqual(["voltage-drop"]);
     expect(searchTools("cable sizing").map((tool) => tool.slug)).toEqual([
       "voltage-drop",
+      "cable-ccc-asnzs",
       "adiabatic",
     ]);
+    expect(searchTools("as/nzs 3008").map((tool) => tool.slug)).toEqual(["cable-ccc-asnzs"]);
     expect(searchTools("accuracy limit factor").map((tool) => tool.slug)).toEqual([
       "protection-ct-alf",
     ]);

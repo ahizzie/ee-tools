@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   CartesianGrid,
   Line,
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { voltageDropCodec, voltageDropDefaults, voltageDropExamples } from "@/config/tool-share";
+import { getTool } from "@/config/tools";
 import {
   voltageDropIec,
   voltageDropVsLength,
@@ -168,6 +170,12 @@ export function VoltageDropCalculator() {
     snapshot,
     applyExample: (example) => setState(example.state),
   });
+
+  const cccTool = getTool("cable-ccc-asnzs");
+  const cccHref = {
+    pathname: "/tools/cable-ccc-asnzs",
+    query: { mat: state.material, a: state.section },
+  } as const;
 
   return (
     <div className="grid min-w-0 gap-6 lg:grid-cols-2">
@@ -323,10 +331,35 @@ export function VoltageDropCalculator() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            {cccTool ? (
+              <p className="text-sm text-muted-foreground">
+                This is a simplified IEC voltage-drop check, not a current-carrying-capacity
+                table.{" "}
+                <Link
+                  href={cccHref}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  Look up tabulated CCC in {cccTool.name}
+                </Link>{" "}
+                (AS/NZS 3008; licensed tables required).
+              </p>
+            ) : null}
           </>
         ) : (
           <ResultCard equation="ΔU = √3 · I · (R cosφ + X sinφ)">
             <p className="text-sm text-destructive">{parsed.message}</p>
+            {cccTool ? (
+              <p className="text-sm text-muted-foreground">
+                Need tabulated ampacity instead?{" "}
+                <Link
+                  href={cccHref}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  Open {cccTool.name}
+                </Link>
+                .
+              </p>
+            ) : null}
           </ResultCard>
         )}
       </div>

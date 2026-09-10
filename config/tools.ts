@@ -40,6 +40,14 @@ export const tools = [
     icon: "cable",
   },
   {
+    slug: "cable-ccc-asnzs",
+    name: "Cable CCC (AS/NZS 3008)",
+    category: "Cable Sizing",
+    description:
+      "Fail-closed lookup of tabulated current-carrying capacity from a licensed AS/NZS 3008.1.1 dataset (AS/NZS 3000 selection obligation). Ships without ampacity numbers until licensed tables are loaded.",
+    icon: "cable",
+  },
+  {
     slug: "adiabatic",
     name: "Adiabatic Short-Circuit CSA",
     category: "Cable Sizing",
