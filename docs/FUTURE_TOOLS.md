@@ -16,9 +16,13 @@ Notes:
 
 Tracked here so the backlog matches the product:
 
-- Home search filtering of tool cards
 - AS/NZS 3000 current-carrying capacity (CCC) tool
 - Protection-curve depth (CT ratio on the TCC, extra characteristics, manufacturer fuse files)
+
+## Shipped in the search / mobile layout work
+
+- Home search filtering of tool cards (header query uses `searchTools` and filters the home grid plus sidebar)
+- Narrow-viewport polish (~390px): stacked form columns, header/search shrink, mobile nav overlay
 
 ## Shipped in the share / copy / examples work
 

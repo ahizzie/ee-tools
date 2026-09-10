@@ -384,7 +384,7 @@ export function ProtectionCurvesCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <p className="text-sm text-muted-foreground">
           IEC 60255-151 IDMT: t = TMS · k / ((I/Iₛ)^α − 1). Overlay relays and
@@ -612,7 +612,7 @@ export function ProtectionCurvesCalculator() {
                 trips={parsed.maxTrips}
               />
             </ResultCard>
-            <div className="h-[28rem] rounded-xl bg-card p-3 ring-1 ring-foreground/10 print:break-inside-avoid">
+            <div className="h-[28rem] min-w-0 overflow-hidden rounded-xl bg-card p-3 ring-1 ring-foreground/10 print:break-inside-avoid">
               <p className="mb-2 text-sm font-medium">Time–current characteristic</p>
               <ResponsiveContainer width="100%" height="90%">
                 <LineChart

@@ -35,14 +35,14 @@ export function NumericInput({
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 gap-2">
         <Input
           id={id}
           inputMode="decimal"
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          className="flex-1"
+          className="min-w-0 flex-1"
         />
         {units && onUnitChange && unit ? (
           <Select

@@ -170,7 +170,7 @@ export function VoltageDropCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <div className="grid gap-1.5">
           <Label>Conductor</Label>
@@ -289,7 +289,7 @@ export function VoltageDropCalculator() {
                 value={`${formatNumber(parsed.value.resistivityOhmMm2PerM, 5)} Ω·mm²/m`}
               />
             </ResultCard>
-            <div className="h-64 rounded-xl bg-card p-3 ring-1 ring-foreground/10 print:break-inside-avoid">
+            <div className="h-64 min-w-0 overflow-hidden rounded-xl bg-card p-3 ring-1 ring-foreground/10 print:break-inside-avoid">
               <p className="mb-2 text-sm font-medium">% voltage drop vs length</p>
               <ResponsiveContainer width="100%" height="90%">
                 <LineChart data={parsed.curve}>

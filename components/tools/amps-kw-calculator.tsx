@@ -96,7 +96,7 @@ export function AmpsKwCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <p className="text-sm text-muted-foreground">
           Balanced three-phase line current ↔ active power. For reactive and

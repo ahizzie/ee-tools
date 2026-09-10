@@ -139,4 +139,12 @@
   main {
     max-width: none;
   }
+
+  #assumptions > :not(summary) {
+    display: grid !important;
+  }
+
+  #assumptions summary svg:last-child {
+    display: none;
+  }
 }

@@ -144,7 +144,7 @@ export function MeteringCtBurdenCalculator() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
         <NumericInput
           id="mct-load"
